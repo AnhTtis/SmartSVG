@@ -1,6 +1,6 @@
 # SmartSVG Engine & Vector Graphics Studio
 
-> Thư viện SVG Engine chuẩn W3C SVG 1.1 và SVG 2 viết bằng TypeScript từ con số 0, tích hợp công cụ đồ hoạ vector tương tác thời gian thực.
+> Thư viện SVG Engine chuẩn W3C SVG 1.1 và SVG 2 được viết hoàn toàn bằng TypeScript từ con số 0, tích hợp công cụ đồ hoạ vector tương tác thời gian thực.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF.svg)](https://vitejs.dev/)
@@ -12,15 +12,15 @@
 
 ## Mục lục
 1. [Giới thiệu tổng quan](#1-giới-thiệu-tổng-quan)
-2. [Cơ sở toán học và giải thuật hình học](#2-cơ-sở-toán-học-và-giải-thuật-hình-học)
+2. [Cơ sở toán học và giải thuật hình học chuẩn xác](#2-cơ-sở-toán-học-và-giải-thuật-hình-học-chuẩn-xác)
    - [2.1. Phân rã elliptical arc sang cubic Bézier (chuẩn W3C F.6)](#21-phân-rã-elliptical-arc-sang-cubic-bézier-chuẩn-w3c-f6)
-   - [2.2. Tính toán tight bounding box bằng nghiệm đạo hàm giải tích](#22-tính-toán-tight-bounding-box-bằng-nghiệm-đạo-hàm-giải-tích)
+   - [2.2. Tính toán tight bounding box qua nghiệm đạo hàm giải tích](#22-tính-toán-tight-bounding-box-qua-nghiệm-đạo-hàm-giải-tích)
    - [2.3. Nâng bậc đường cong quadratic sang cubic Bézier](#23-nâng-bậc-đường-cong-quadratic-sang-cubic-bézier)
-   - [2.4. Đối xứng điểm điều khiển cho lệnh mượt (S/s và T/t)](#24-đối-xứng-điểm-điều-khiển-cho-lệnh-mượt-ss-và-tt)
-   - [2.5. Ma trận biến đổi affine 2D và phép nghịch đảo](#25-ma-trận-biến-đổi-affine-2d-và-phép-nghịch-đảo)
-3. [Kiến trúc hướng đối tượng (OOP) và các mẫu thiết kế (design patterns)](#3-kiến-trúc-hướng-đối-tượng-oop-và-các-mẫu-thiết-kế-design-patterns)
-   - [3.1. Hiện thực bốn trụ cột OOP](#31-hiện-thực-bốn-trụ-cột-oop)
-   - [3.2. Các mẫu thiết kế (design patterns) áp dụng trong hệ thống](#32-các-mẫu-thiết-kế-design-patterns-áp-dụng-trong-hệ-thống)
+   - [2.4. Phản chiếu điểm điều khiển cho các lệnh mượt (S/s và T/t)](#24-phản-chiếu-điểm-điều-khiển-cho-các-lệnh-mượt-ss-và-tt)
+   - [2.5. Đại số tuyến tính ma trận biến đổi affine 2D](#25-đại-số-tuyến-tính-ma-trận-biến-đổi-affine-2d)
+3. [Kiến trúc hướng đối tượng (OOP) và mẫu thiết kế (design patterns)](#3-kiến-trúc-hướng-đối-tượng-oop-và-mẫu-thiết-kế-design-patterns)
+   - [3.1. Bốn trụ cột lập trình hướng đối tượng](#31-bốn-trụ-cột-lập-trình-hướng-đối-tượng)
+   - [3.2. Chi tiết các mẫu thiết kế (design patterns) trong hệ thống](#32-chi-tiết-các-mẫu-thiết-kế-design-patterns-trong-hệ-thống)
 4. [Hướng dẫn cài đặt và chạy dự án](#4-hướng-dẫn-cài-đặt-và-chạy-dự-án)
 5. [Cấu trúc thư mục dự án](#5-cấu-trúc-thư-mục-dự-án)
 6. [Bộ kiểm thử tự động (unit testing)](#6-bộ-kiểm-thử-tự-động-unit-testing)
@@ -30,7 +30,7 @@
 
 ## 1. Giới thiệu tổng quan
 
-SmartSVG là một hệ thống SVG Engine thuần TypeScript hoàn chỉnh, được xây dựng theo kiến trúc **trình biên dịch và cây cú pháp trừu tượng (Compiler & AST Scene Graph)**. Engine xử lý toàn diện các thành phần hình học, ma trận biến đổi, màu sắc, gradient kế thừa đa tầng và tầng cascading CSS của chuẩn W3C SVG 1.1 và SVG 2.
+SmartSVG là hệ thống SVG Engine thuần TypeScript, được xây dựng theo kiến trúc **trình biên dịch và cây cú pháp trừu tượng (Compiler & AST Scene Graph)**. Engine đảm bảo tính chuẩn xác về toán học giải tích, bao phủ toàn bộ các nhóm lệnh đường cong, các phép biến đổi ma trận 2D, cơ chế kế thừa màu gradient đa tầng và phân cấp ưu tiên CSS của chuẩn W3C SVG 1.1 và SVG 2.
 
 ```text
 ========================================================================================
@@ -74,93 +74,104 @@ SmartSVG là một hệ thống SVG Engine thuần TypeScript hoàn chỉnh, đ�
 
 ---
 
-## 2. Cơ sở toán học và giải thuật hình học
+## 2. Cơ sở toán học và giải thuật hình học chuẩn xác
 
 ### 2.1. Phân rã elliptical arc sang cubic Bézier (chuẩn W3C F.6)
 
-Một cung elip trong SVG được định nghĩa bằng toạ độ điểm đầu $(x_1, y_1)$, điểm cuối $(x_2, y_2)$, hai bán kính $(r_x, r_y)$, góc nghiêng trục $\phi$, cờ cung lớn $f_A \in \{0, 1\}$ và cờ quét $f_S \in \{0, 1\}$. 
+Một cung elip trong SVG được xác định bởi điểm xuất phát $\mathbf{P}_1 = (x_1, y_1)$, điểm kết thúc $\mathbf{P}_2 = (x_2, y_2)$, bán kính trục $(r_x, r_y)$, góc nghiêng trục $\phi$, cờ cung lớn $f_A \in \{0, 1\}$ và cờ hướng quét $f_S \in \{0, 1\}$. 
 
-Giải thuật W3C chuyển đổi từ tham số điểm cuối sang tham số tâm $(c_x, c_y, \theta_1, \Delta\theta)$ và phân rã thành chuỗi đường cong cubic Bézier:
+Giải thuật W3C Appendix F.6 chuyển đổi từ tham số điểm cuối sang tham số tâm $(c_x, c_y, \theta_1, \Delta\theta)$ và phân rã thành chuỗi đường cong cubic Bézier:
 
-1. **Chuyển đổi toạ độ sang hệ trục elip quay:**
+1. **Chuyển toạ độ sai phân sang hệ trục elip quay:**
    $$\begin{bmatrix} x_1' \\ y_1' \end{bmatrix} = \begin{bmatrix} \cos\phi & \sin\phi \\ -\sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} \frac{x_1 - x_2}{2} \\ \frac{y_1 - y_2}{2} \end{bmatrix}$$
 
-2. **Kiểm tra và tự động hiệu chỉnh tỉ lệ bán kính:**
+2. **Kiểm tra và tự động co giãn bán kính nếu không đủ lớn:**
    $$\Lambda = \frac{{x_1'}^2}{r_x^2} + \frac{{y_1'}^2}{r_y^2}$$
-   Nếu $\Lambda > 1$, bán kính được co giãn để đi qua hai điểm:
+   Nếu $\Lambda > 1$, cung elip không thể đi qua hai điểm với bán kính hiện tại. Chuẩn W3C quy định tự động co giãn:
    $$r_x \leftarrow \sqrt{\Lambda} \, r_x, \quad r_y \leftarrow \sqrt{\Lambda} \, r_y$$
 
 3. **Tính toạ độ tâm trong hệ trục quay $(c_x', c_y')$:**
    $$\begin{bmatrix} c_x' \\ c_y' \end{bmatrix} = \pm \sqrt{\max\left(0, \frac{r_x^2 r_y^2 - r_x^2 {y_1'}^2 - r_y^2 {x_1'}^2}{r_x^2 {y_1'}^2 + r_y^2 {x_1'}^2}\right)} \begin{bmatrix} \frac{r_x y_1'}{r_y} \\ -\frac{r_y x_1'}{r_x} \end{bmatrix}$$
-   Dấu chọn là $+$ nếu $f_A \neq f_S$, và dấu $-$ nếu $f_A = f_S$.
+   Quy tắc dấu: Chọn dấu $+$ nếu $f_A \neq f_S$, chọn dấu $-$ nếu $f_A = f_S$.
 
 4. **Chuyển tâm về hệ toạ độ thế giới ban đầu $(c_x, c_y)$:**
    $$\begin{bmatrix} c_x \\ c_y \end{bmatrix} = \begin{bmatrix} \cos\phi & -\sin\phi \\ \sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} + \begin{bmatrix} \frac{x_1 + x_2}{2} \\ \frac{y_1 + y_2}{2} \end{bmatrix}$$
 
 5. **Xác định góc bắt đầu $\theta_1$ và góc quét $\Delta\theta$:**
-   $$\theta_1 = \text{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \text{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right) \pmod{2\pi}$$
-   Nếu $f_S = 0$ và $\Delta\theta > 0$ thì $\Delta\theta \leftarrow \Delta\theta - 2\pi$. Nếu $f_S = 1$ và $\Delta\theta < 0$ thì $\Delta\theta \leftarrow \Delta\theta + 2\pi$.
+   Hàm tính góc có dấu giữa hai vector 2D $\mathbf{u}$ và $\mathbf{v}$:
+   $$\text{angle}(\mathbf{u}, \mathbf{v}) = \text{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)$$
+   Từ đó tính góc bắt đầu và góc quét:
+   $$\theta_1 = \text{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \text{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)$$
+   Hiệu chỉnh góc quét theo cờ $f_S$:
+   - Nếu $f_S = 0$ và $\Delta\theta > 0$, thì $\Delta\theta \leftarrow \Delta\theta - 2\pi$.
+   - Nếu $f_S = 1$ và $\Delta\theta < 0$, thì $\Delta\theta \leftarrow \Delta\theta + 2\pi$.
 
 6. **Phân đoạn và xấp xỉ bằng cubic Bézier:**
-   Cung được chia thành $N = \lceil |\Delta\theta| / (\pi/2) \rceil$ phân đoạn góc $\delta = \Delta\theta / N$. Hệ số khoảng cách điểm điều khiển tối ưu:
+   Cung được chia thành $N = \lceil |\Delta\theta| / (\pi/2) \rceil$ phân đoạn góc nhỏ $\delta = \Delta\theta / N$. 
+   Hệ số khoảng cách điểm điều khiển:
    $$\alpha = \frac{4}{3} \tan\left(\frac{\delta}{4}\right)$$
-   Với mỗi phân đoạn bắt đầu từ góc $\theta$, điểm trên elip và vector đạo hàm tiếp tuyến:
-   $$\mathbf{P}(t) = \begin{bmatrix} c_x + r_x \cos t \cos\phi - r_y \sin t \sin\phi \\ c_y + r_x \cos t \sin\phi + r_y \sin t \cos\phi \end{bmatrix}, \quad \mathbf{P}'(t) = \begin{bmatrix} -r_x \sin t \cos\phi - r_y \cos t \sin\phi \\ -r_x \sin t \sin\phi + r_y \cos t \cos\phi \end{bmatrix}$$
-   Hai điểm điều khiển của đoạn cubic Bézier tương ứng là:
+   Với mỗi góc $\theta$, toạ độ điểm trên elip và đạo hàm tiếp tuyến:
+   $$\mathbf{P}(\theta) = \begin{bmatrix} c_x + r_x \cos\theta \cos\phi - r_y \sin\theta \sin\phi \\ c_y + r_x \cos\theta \sin\phi + r_y \sin\theta \cos\phi \end{bmatrix}, \quad \mathbf{P}'(\theta) = \begin{bmatrix} -r_x \sin\theta \cos\phi - r_y \cos\theta \sin\phi \\ -r_x \sin\theta \sin\phi + r_y \cos\theta \cos\phi \end{bmatrix}$$
+   Hai điểm điều khiển cho từng phân đoạn từ $\theta$ đến $\theta + \delta$:
    $$\mathbf{CP}_1 = \mathbf{P}(\theta) + \alpha \mathbf{P}'(\theta), \quad \mathbf{CP}_2 = \mathbf{P}(\theta + \delta) - \alpha \mathbf{P}'(\theta + \delta)$$
 
 ---
 
-### 2.2. Tính toán tight bounding box bằng nghiệm đạo hàm giải tích
+### 2.2. Tính toán tight bounding box qua nghiệm đạo hàm giải tích
 
-Hộp bao chính xác của đường cong không thể lấy đơn thuần từ các điểm điều khiển (control point hull) vì sẽ bị dư thừa diện tích. Hệ thống tìm cực trị cục bộ bằng nghiệm của đạo hàm bậc nhất trên khoảng $t \in (0, 1)$:
+Hộp bao chính xác (tight axis-aligned bounding box) của đường cong Bézier không thể lấy từ hộp bao của các điểm điều khiển (control hull) do phần lồi thực tế của đường cong thường nhỏ hơn đa giác điều khiển. Hệ thống tìm nghiệm giải tích của phương trình đạo hàm $\mathbf{B}'(t) = \mathbf{0}$ trên khoảng mở $t \in (0, 1)$:
 
-#### Quadratic Bézier:
-Phương trình tham số:
+#### Đối với Quadratic Bézier:
+Phương trình tham số bậc hai:
 $$\mathbf{B}(t) = (1-t)^2 \mathbf{P}_0 + 2(1-t)t \mathbf{P}_1 + t^2 \mathbf{P}_2, \quad t \in [0, 1]$$
 Đạo hàm bậc nhất theo $t$:
 $$\mathbf{B}'(t) = 2(1-t)(\mathbf{P}_1 - \mathbf{P}_0) + 2t(\mathbf{P}_2 - \mathbf{P}_1) = 2(\mathbf{P}_0 - 2\mathbf{P}_1 + \mathbf{P}_2)t + 2(\mathbf{P}_1 - \mathbf{P}_0)$$
-Nghiệm cực trị cho từng trục $x$ và $y$:
+Nghiệm cực trị trên từng trục độc lập:
 $$t^* = \frac{P_0 - P_1}{P_0 - 2P_1 + P_2}$$
-Nếu $t^* \in (0, 1)$, tập giá trị kiểm tra là $\{B(0), B(1), B(t^*)\}$.
+Nếu mẫu số khác không và $t^* \in (0, 1)$, giá trị $\mathbf{B}(t^*)$ được đưa vào tập điểm ứng viên cùng với $\mathbf{B}(0)$ và $\mathbf{B}(1)$ để lấy $\min$ và $\max$.
 
-#### Cubic Bézier:
-Phương trình tham số:
+#### Đối với Cubic Bézier:
+Phương trình tham số bậc ba:
 $$\mathbf{B}(t) = (1-t)^3 \mathbf{P}_0 + 3(1-t)^2 t \mathbf{P}_1 + 3(1-t)t^2 \mathbf{P}_2 + t^3 \mathbf{P}_3, \quad t \in [0, 1]$$
-Đạo hàm bậc nhất theo $t$ là phương trình bậc hai:
-$$\mathbf{B}'(t) = 3(-\mathbf{P}_0 + 3\mathbf{P}_1 - 3\mathbf{P}_2 + \mathbf{P}_3)t^2 + 6(\mathbf{P}_0 - 2\mathbf{P}_1 + \mathbf{P}_2)t + 3(\mathbf{P}_1 - \mathbf{P}_0) = 0$$
-Đặt:
-$$a = 3(-P_0 + 3P_1 - 3P_2 + P_3), \quad b = 6(P_0 - 2P_1 + P_2), \quad c = 3(P_1 - P_0)$$
-Các nghiệm thực $t = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ nằm trong khoảng $(0, 1)$ được đưa vào tập kiểm tra cùng với $B(0)$ và $B(1)$ để xác định chính xác $\min$ và $\max$.
+Đạo hàm bậc nhất theo $t$:
+$$\mathbf{B}'(t) = 3(1-t)^2(\mathbf{P}_1 - \mathbf{P}_0) + 6(1-t)t(\mathbf{P}_2 - \mathbf{P}_1) + 3t^2(\mathbf{P}_3 - \mathbf{P}_2) = \mathbf{A} t^2 + \mathbf{B} t + \mathbf{C} = \mathbf{0}$$
+Trong đó các hệ số cho từng trục:
+$$\begin{cases} A = 3(-P_0 + 3P_1 - 3P_2 + P_3) \\ B = 6(P_0 - 2P_1 + P_2) \\ C = 3(P_1 - P_0) \end{cases}$$
+1. Nếu $A = 0$ và $B \neq 0$: nghiệm suy biến phương trình bậc nhất $t = -C / B$.
+2. Nếu $A \neq 0$: biệt thức $\Delta = B^2 - 4AC$. Nếu $\Delta \ge 0$, hai nghiệm là:
+   $$t_{1, 2} = \frac{-B \pm \sqrt{\Delta}}{2A}$$
+Tất cả các nghiệm $t_k \in (0, 1)$ cùng với $t = 0$ và $t = 1$ tạo thành tập giá trị cực trị giải tích để tính chính xác biên $[x_{\min}, x_{\max}] \times [y_{\min}, y_{\max}]$.
 
 ---
 
 ### 2.3. Nâng bậc đường cong quadratic sang cubic Bézier
 
-Để đồng nhất xử lý hình học và render, đường cong bậc hai (quadratic) với điểm đầu $\mathbf{P}_0$, điểm điều khiển $\mathbf{P}_1$, điểm cuối $\mathbf{P}_2$ được nâng lên đường cong bậc ba (cubic) tương đương chính xác về mặt hình học:
-$$\mathbf{CP}_1 = \mathbf{P}_0 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_0), \quad \mathbf{CP}_2 = \mathbf{P}_2 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_2)$$
+Để thống nhất biểu diễn hình học, đường cong bậc hai với các điểm $(\mathbf{P}_0, \mathbf{P}_1, \mathbf{P}_2)$ được nâng bậc chính xác thành đường cong bậc ba $(\mathbf{C}_0, \mathbf{C}_1, \mathbf{C}_2, \mathbf{C}_3)$ bằng cách nhân với đa thức đồng nhất $(1-t) + t = 1$:
+$$\mathbf{C}_0 = \mathbf{P}_0, \quad \mathbf{C}_1 = \mathbf{P}_0 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_0), \quad \mathbf{C}_2 = \mathbf{P}_2 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_2), \quad \mathbf{C}_3 = \mathbf{P}_2$$
 
 ---
 
-### 2.4. Đối xứng điểm điều khiển cho lệnh mượt (S/s và T/t)
+### 2.4. Phản chiếu điểm điều khiển cho các lệnh mượt (S/s và T/t)
 
-Chuẩn W3C quy định lệnh tiếp tuyến mượt `S`/`s` (cubic) và `T`/`t` (quadratic) tự động phản chiếu điểm điều khiển cuối cùng của lệnh trước đó qua điểm hiện tại $\mathbf{P}_0$:
-$$\mathbf{CP}_{\text{reflected}} = 2 \mathbf{P}_0 - \mathbf{CP}_{\text{last}}$$
-Nếu lệnh đứng liền trước không phải là lệnh cong cùng bậc, điểm điều khiển phản chiếu sẽ suy biến trùng với điểm hiện tại $\mathbf{P}_0$.
-
----
-
-### 2.5. Ma trận biến đổi affine 2D và phép nghịch đảo
-
-Mọi phép biến đổi trong không gian 2D được biểu diễn qua ma trận thuần nhất $3 \times 3$:
-$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \implies \begin{cases} x' = ax + cy + e \\ y' = bx + dy + f \end{cases}$$
-
-Định thức ma trận $\det(M) = ad - bc$. Khi $\det(M) \neq 0$, ma trận nghịch đảo $M^{-1}$ được tính bởi:
-$$M^{-1} = \frac{1}{ad - bc} \begin{bmatrix} d & -c & cf - de \\ -b & a & be - af \\ 0 & 0 & ad - bc \end{bmatrix}$$
+Đối với các lệnh cong tiếp tuyến mượt `S`/`s` (cubic) và `T`/`t` (quadratic), điểm điều khiển đầu tiên $\mathbf{CP}_{\text{reflected}}$ được lấy đối xứng qua điểm hiện tại $\mathbf{P}_0$ từ điểm điều khiển cuối cùng $\mathbf{CP}_{\text{last}}$ của lệnh liền trước:
+$$\mathbf{CP}_{\text{reflected}} = \mathbf{P}_0 + (\mathbf{P}_0 - \mathbf{CP}_{\text{last}}) = 2 \mathbf{P}_0 - \mathbf{CP}_{\text{last}}$$
+Nếu lệnh liền trước không phải là lệnh cong cùng bậc, điểm phản chiếu suy biến thành chính $\mathbf{P}_0$.
 
 ---
 
-## 3. Kiến trúc hướng đối tượng (OOP) và các mẫu thiết kế (design patterns)
+### 2.5. Đại số tuyến tính ma trận biến đổi affine 2D
+
+Mọi phép biến đổi phẳng 2D (tịnh tiến, quay, co giãn, xiên trục) được mô tả qua ma trận toạ độ thuần nhất $3 \times 3$:
+$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \iff \begin{cases} x' = ax + cy + e \\ y' = bx + dy + f \end{cases}$$
+
+Định thức ma trận là $\det(M) = ad - bc$. Ma trận nghịch đảo $M^{-1}$ tồn tại khi và chỉ khi $\det(M) \neq 0$:
+$$M^{-1} = \begin{bmatrix} \frac{d}{ad - bc} & \frac{-c}{ad - bc} & \frac{cf - de}{ad - bc} \\ \frac{-b}{ad - bc} & \frac{a}{ad - bc} & \frac{be - af}{ad - bc} \\ 0 & 0 & 1 \end{bmatrix}$$
+
+Phép nhân hai ma trận biến đổi $M_1 \times M_2$ tương ứng với việc áp dụng phép biến đổi $M_2$ trước, sau đó áp dụng phép biến đổi $M_1$.
+
+---
+
+## 3. Kiến trúc hướng đối tượng (OOP) và mẫu thiết kế (design patterns)
 
 Hệ thống được thiết kế theo chuẩn module hoá, tuân thủ nguyên lý thiết kế SOLID và vận dụng chặt chẽ các đặc tính của lập trình hướng đối tượng:
 
@@ -176,57 +187,64 @@ svgEngine/
 
 ---
 
-### 3.1. Hiện thực bốn trụ cột OOP
+### 3.1. Bốn trụ cột lập trình hướng đối tượng
 
 #### 1. Tính đóng gói (Encapsulation)
-- Mỗi đối tượng hình học (`Vector2D`, `Matrix2D`, `BoundingBox`, `Color`, `SVGLength`) tự đóng gói trạng thái nội tại và bảo vệ tính bất biến (immutability) ở các thao tác toán học cơ bản.
-- Thuật toán giải nghiệm đạo hàm tìm hộp bao và thuật toán lượng giác W3C F.6 được đóng gói hoàn toàn bên trong các phương thức `getBounds()` và `toCubicBeziers()`, che giấu độ phức tạp khỏi người dùng thư viện.
-- Trạng thái của một node được chia thành ba khối độc lập có phạm vi rõ ràng: `Geometry`, `Style` và `Metadata`.
+- **Quản lý trạng thái nội tại:** Các đối tượng value object như `Vector2D`, `Matrix2D`, `BoundingBox`, `Color`, `SVGLength` bảo vệ dữ liệu nội tại và trả về bản sao mới khi tính toán, đảm bảo tính bất biến (immutability).
+- **Ẩn giấu giải thuật phức tạp:** Thuật toán W3C F.6 và nghiệm đạo hàm tìm hộp bao được đóng gói trọn vẹn trong các phương thức của `ArcCommand`, `CubicBezierCommand`, `QuadBezierCommand`. Người dùng chỉ cần gọi `.getBounds()` hoặc `.toCubicBeziers()` mà không cần can thiệp vào các biến trung gian.
+- **Phân tách ba tầng dữ liệu trong ASTNode:** Mỗi node phân tách độc lập ba khối:
+  - `Geometry`: Toạ độ, kích thước, danh sách lệnh path, ma trận cục bộ.
+  - `Style`: Màu fill, stroke, strokeWidth, opacity, fontStyle.
+  - `Metadata`: id, className, attributes mở rộng, trạng thái tương tác.
 
 #### 2. Tính kế thừa (Inheritance)
-- **Hệ thống node AST:** Lớp trừu tượng cơ sở `ASTNode` (`ast/ast-node.ts`) định nghĩa các thuộc tính và phương thức chung (quản lý quan hệ cha-con, ma trận thế giới, biến đổi, clone, duyệt cây). Các lớp cụ thể kế thừa trực tiếp:
-  - Nhóm chứa: `RootNode`, `GroupNode`, `SymbolNode`, `AnchorNode`.
-  - Nhóm hình học cơ bản: `RectNode`, `CircleNode`, `EllipseNode`, `LineNode`, `PolylineNode`, `PolygonNode`.
-  - Nhóm đường cong tự do: `PathNode`.
-  - Nhóm văn bản: `TextNode`, `TSpanNode`, `TextPathNode`.
-  - Nhóm tài nguyên và định nghĩa: `ClipPathNode`, `MaskNode`, `FilterNode`, `MarkerNode`, `PatternNode`, `UseNode`, `ForeignObjectNode`.
-- **Hệ thống lệnh path:** Lớp trừu tượng `PathCommand` (`core/path/path-command.ts`) làm lớp cha cho 10 class lệnh: `MoveToCommand`, `LineToCommand`, `CubicBezierCommand`, `QuadBezierCommand`, `ArcCommand`, `ClosePathCommand`.
-- **Hệ thống gradient:** Lớp trừu tượng `BaseGradientPaint` làm lớp cha quản lý stops, units, spread method và transform cho hai lớp con `LinearGradientPaint` và `RadialGradientPaint`.
+- **Hệ thống phân cấp ASTNode:**
+  - `ASTNode` (`ast/ast-node.ts`) là abstract base class định nghĩa toàn bộ giao diện chung: quản lý cây cha-con (`parent`, `children`, `addChild`, `removeChild`), nhân dồn ma trận toạ độ thế giới (`getWorldTransform()`), tính hộp bao thế giới (`getWorldBounds()`), clone sâu (`clone()`), và duyệt cây đệ quy (`traverse()`).
+  - Các lớp kế thừa chuyên biệt hoá:
+    - Nhóm chứa container: `RootNode` (`<svg>`), `GroupNode` (`<g>`), `SymbolNode` (`<symbol>`), `AnchorNode` (`<a>`).
+    - Nhóm hình học cơ bản: `RectNode`, `CircleNode`, `EllipseNode`, `LineNode`, `PolylineNode`, `PolygonNode`.
+    - Nhóm đường cong: `PathNode`.
+    - Nhóm văn bản: `TextNode`, `TSpanNode`, `TextPathNode`.
+    - Nhóm định nghĩa và hiệu ứng: `ClipPathNode`, `MaskNode`, `FilterNode`, `MarkerNode`, `PatternNode`, `UseNode`, `ForeignObjectNode`.
+- **Hệ thống phân cấp PathCommand:**
+  - `PathCommand` (`core/path/path-command.ts`) là abstract base class cho 10 class lệnh: `MoveToCommand`, `LineToCommand`, `CubicBezierCommand`, `QuadBezierCommand`, `ArcCommand`, `ClosePathCommand`.
+- **Hệ thống phân cấp Gradient Paint:**
+  - `BaseGradientPaint` là abstract class quản lý danh sách `GradientStop`, `spreadMethod`, `gradientUnits`, `gradientTransform` cho hai lớp con `LinearGradientPaint` và `RadialGradientPaint`.
 
 #### 3. Tính đa hình (Polymorphism)
-- Phương thức `getBounds(currentPoint: Vector2D): BoundingBox` được định nghĩa trừu tượng ở `PathCommand` và được từng class lệnh (`CubicBezierCommand`, `QuadBezierCommand`, `ArcCommand`, `LineToCommand`) ghi đè (override) để thực thi giải thuật toán học riêng biệt của từng loại đường cong.
-- Phương thức `toSVGString(): string` và `toMatrix(): Matrix2D` được đa hình hoá qua toàn bộ hệ thống lệnh transform (`TranslateTransform`, `ScaleTransform`, `RotateTransform`, `SkewTransform`, `MatrixTransform`).
-- Giao diện `IPaint` cho phép các đối tượng `SolidPaint`, `NonePaint`, `CurrentColorPaint`, `LinearGradientPaint`, `RadialGradientPaint` được truyền và xử lý đồng nhất ở thuộc tính `fill` và `stroke` của mọi node.
+- **Đa hình phương thức hình học:** Phương thức `getBounds(currentPoint: Vector2D): BoundingBox` và `transform(matrix: Matrix2D)` được định nghĩa trừu tượng ở `PathCommand` và được ghi đè (override) riêng biệt trên từng lệnh `CubicBezierCommand` (nghiệm đạo hàm bậc 2), `QuadBezierCommand` (nghiệm đạo hàm bậc 1), `ArcCommand` (phân rã Bézier), và `LineToCommand` (đoạn thẳng).
+- **Đa hình hệ thống màu vẽ (`IPaint`):** Các class `SolidPaint`, `NonePaint`, `CurrentColorPaint`, `LinearGradientPaint`, `RadialGradientPaint` cùng hiện thực giao diện `IPaint`. Tầng Renderer và Serializer gọi `.toSVGString()` hoặc `.isTransparent()` một cách đồng nhất mà không cần kiểm tra kiểu dữ liệu thủ công bằng `if/else`.
+- **Đa hình hệ thống biến đổi (`ITransform`):** Các lớp `TranslateTransform`, `ScaleTransform`, `RotateTransform`, `SkewTransform`, `MatrixTransform` cùng hiện thực phương thức `toMatrix(): Matrix2D`.
 
 #### 4. Tính trừu tượng (Abstraction)
-- Tách biệt hoàn toàn giữa biểu diễn dữ liệu trừu tượng (cây `ASTNode`) với cách thức hiển thị ra DOM (`DOMRenderer`), cách thức phân tích dữ liệu (`SVGAnalyzer`), và cách thức xuất file (`SVGSerializer`).
-- Các giao diện `IPaint`, `ITransform`, `SVGDefItem` thiết lập các hợp đồng giao tiếp (contracts) mức cao, giúp hệ thống dễ dàng mở rộng thêm các loại paint hoặc filter mới mà không ảnh hưởng tới core engine.
+- Tách rời hoàn toàn giữa cấu trúc biểu diễn hình học (`ASTNode`) với cơ chế render DOM (`DOMRenderer`), cơ chế phân tích thống kê (`SVGAnalyzer`), và cơ chế xuất file (`SVGSerializer`).
+- Các interface `IPaint`, `ITransform`, `SVGDefItem` đóng vai trò bản giao ước trừu tượng (contracts), cho phép mở rộng thêm các loại bộ lọc filter hoặc kiểu màu mới mà không làm thay đổi lõi hệ thống.
 
 ---
 
-### 3.2. Các mẫu thiết kế (design patterns) áp dụng trong hệ thống
+### 3.2. Chi tiết các mẫu thiết kế (design patterns) trong hệ thống
 
-1. **Composite Pattern (Cây Scene Graph & Transform List):**
-   - Cây AST tổ chức theo dạng cây đệ quy: `GroupNode` và `RootNode` có thể chứa các `ASTNode` con (bao gồm cả các `GroupNode` lồng nhau). Thao tác duyệt cây `traverse()` hoặc tính ma trận toàn cục `getWorldTransform()` được thực thi đồng nhất từ gốc đến mọi lá.
-   - `TransformList` gom nhóm danh sách các phép biến đổi đơn lẻ (`ITransform`) và tổng hợp thành một ma trận duy nhất theo thứ tự nhân từ phải sang trái.
+#### 1. Composite Pattern (Cây Scene Graph và chuỗi biến đổi Transform)
+- **Cây Scene Graph:** `RootNode` và `GroupNode` đóng vai trò Composite chứa mảng `children: ASTNode[]`. Các node lá như `PathNode`, `RectNode`, `CircleNode` đóng vai trò Leaf. Các phương thức như `traverse()`, `getWorldTransform()`, và `clone()` xử lý đệ quy trong suốt trên toàn bộ cấu trúc cây.
+- **Chuỗi phép biến đổi:** `TransformList` đóng vai trò Composite chứa nhiều đối tượng đơn lẻ `ITransform`, cho phép gom nhóm và nhân ma trận dồn từ phải sang trái.
 
-2. **Command Pattern (Lệnh Path & Quản lý Undo/Redo):**
-   - Từng phân đoạn đường cong trong thuộc tính `d` của thẻ `<path>` được trừu tượng hoá thành một đối tượng Command thực thi.
-   - Hệ thống lịch sử thao tác (`HistoryManager`) lưu trữ ngăn xếp các đối tượng lệnh chỉnh sửa để hỗ trợ hoàn tác và làm lại (`Ctrl + Z`, `Ctrl + Y`).
+#### 2. Command Pattern (Đa hình phân đoạn Path và lịch sử Undo/Redo)
+- **Lệnh hình học:** Mỗi phân đoạn trong thuộc tính `d` của thẻ `<path>` là một đối tượng Command độc lập (`MoveToCommand`, `LineToCommand`, `CubicBezierCommand`, `ArcCommand`...), tự chịu trách nhiệm biến đổi toạ độ và sinh chuỗi SVG.
+- **Quản lý hoàn tác:** `HistoryManager` lưu trữ ngăn xếp các đối tượng lệnh thao tác chỉnh sửa, cho phép thực thi `undo()` và `redo()` thông qua các phím tắt `Ctrl + Z`, `Ctrl + Y`.
 
-3. **Strategy & Factory Pattern (Hệ thống màu vẽ Paint):**
-   - `IPaint` đóng vai trò Strategy định nghĩa chiến lược tô màu và sinh mã SVG.
-   - `PaintFactory` đóng vai trò Factory method phân tích chuỗi màu bất kỳ (`hex`, `rgb`, `hsl`, `url(#id)`, `named color`, `none`, `currentColor`) để khởi tạo đối tượng Paint tương ứng.
+#### 3. Strategy & Factory Pattern (Hệ thống màu vẽ Paint)
+- **Strategy:** `IPaint` là Strategy interface đại diện cho thuật toán tô màu và sinh mã SVG. Từng đối tượng màu (`SolidPaint`, `LinearGradientPaint`, `RadialGradientPaint`, `NonePaint`) đóng gói thuật toán tô màu tương ứng.
+- **Factory:** `PaintFactory.create(value, defsRegistry)` đóng vai trò Factory method tiếp nhận chuỗi đầu vào bất kỳ (màu hex, rgb, hsl, tên màu W3C, `url(#id)`, `currentColor`) và trả về đúng đối tượng `IPaint` tương ứng.
 
-4. **Visitor Pattern (Bộ phân tích số liệu Analyzer):**
-   - `ComplexityAnalyzer` và `ColorExtractor` đóng vai trò Visitor duyệt qua toàn bộ cây AST thông qua hàm `traverse()`, thu thập các số liệu thống kê (đếm đỉnh, đếm đoạn cong, tính diện tích bao phủ, trích xuất palette màu) mà không làm biến đổi cấu trúc các node.
+#### 4. Visitor Pattern (Bộ phân tích số liệu Analyzer)
+- `ComplexityAnalyzer` và `ColorExtractor` đóng vai trò Visitor duyệt qua toàn bộ cây AST thông qua phương thức `traverse(callback)`. Visitor bóc tách các chỉ số thống kê (tổng số đỉnh, số đoạn cong Bézier, diện tích bao phủ, bảng màu và gradient stops) mà không làm ô nhiễm hoặc thay đổi cấu trúc dữ liệu của các `ASTNode`.
 
-5. **Façade Pattern (Điểm truy cập đơn giản hoá):**
-   - `SVGParser` cung cấp phương thức duy nhất `SVGParser.parse(svgString)` che giấu toàn bộ quy trình phức tạp bên dưới: gọi `DOMParser`, phân tích bảng mã màu, bóc tách `<defs>`, giải quyết kế thừa gradient đa tầng, phân tích CSS cascade và dựng cây `ASTNode`.
-   - `SVGSerializer` cung cấp phương thức `SVGSerializer.serialize(rootNode)` che giấu quá trình duyệt cây và định dạng XML.
+#### 5. Façade Pattern (Giao diện đơn giản hoá của Parser và Serializer)
+- `SVGParser` đóng vai trò Façade cung cấp một điểm gọi duy nhất `SVGParser.parse(svgString)`. Bên trong, Façade điều phối `DOMParser`, `PathParser` (lexer/tokenizer), `GradientParser` (giải quyết kế thừa DAG), `CSSStylesheetParser` (phân giải quy tắc CSS), và `StyleParser` (tính toán cascading).
+- `SVGSerializer` cung cấp API đơn giản `SVGSerializer.serialize(rootNode)` che giấu toàn bộ quá trình duyệt cây và định dạng chuỗi XML.
 
-6. **Registry / Cache Pattern (Kho lưu trữ Defs):**
-   - Quản lý các định nghĩa dùng lại trong thẻ `<defs>` (gradient, clipPath, mask, marker, pattern, filter) theo bảng ánh xạ mã định danh ID, hỗ trợ truy xuất nhanh khi các node hình học tham chiếu bằng `url(#id)`.
+#### 6. Registry Pattern (Kho quản lý định nghĩa Defs)
+- Quản lý các định nghĩa dùng lại trong thẻ `<defs>` (gradient, clipPath, mask, marker, pattern, filter) theo bảng ánh xạ mã định danh ID, hỗ trợ các phần tử hình học liên kết nhanh thông qua cú pháp `url(#id)`.
 
 ---
 
