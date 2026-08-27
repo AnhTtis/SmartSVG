@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF.svg)](https://vitejs.dev/)
 [![Vitest](https://img.shields.io/badge/Vitest-4.x-729B1B.svg)](https://vitest.dev/)
-[![Tests](https://img.shields.io/badge/Tests-18%2F18%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-18%2F18%20Passed-brightgreen.svg)](#6-bộ-kiểm-thử-tự-động-unit-testing)
 [![W3C Spec](https://img.shields.io/badge/W3C-SVG%201.1%20%2F%20SVG%202-orange.svg)](https://www.w3.org/TR/SVG2/)
 
 ---
@@ -78,96 +78,178 @@ SmartSVG là hệ thống SVG Engine thuần TypeScript, được xây dựng th
 
 ### 2.1. Phân rã elliptical arc sang cubic Bézier (chuẩn W3C F.6)
 
-Một cung elip trong SVG được xác định bởi điểm xuất phát $\mathbf{P}_1 = (x_1, y_1)$, điểm kết thúc $\mathbf{P}_2 = (x_2, y_2)$, bán kính trục $(r_x, r_y)$, góc nghiêng trục $\phi$, cờ cung lớn $f_A \in \{0, 1\}$ và cờ hướng quét $f_S \in \{0, 1\}$. 
+Một cung elip trong SVG được xác định bởi điểm xuất phát $`\mathbf{P}_1 = (x_1, y_1)`$, điểm kết thúc $`\mathbf{P}_2 = (x_2, y_2)`$, bán kính trục $`(r_x, r_y)`$, góc nghiêng trục $`\phi`$, cờ cung lớn $`f_A \in \{0, 1\}`$ và cờ hướng quét $`f_S \in \{0, 1\}`$.
 
-Giải thuật W3C Appendix F.6 chuyển đổi từ tham số điểm cuối sang tham số tâm $(c_x, c_y, \theta_1, \Delta\theta)$ và phân rã thành chuỗi đường cong cubic Bézier:
+Giải thuật W3C Appendix F.6 chuyển đổi từ tham số điểm cuối sang tham số tâm $`(c_x, c_y, \theta_1, \Delta\theta)`$ và phân rã thành chuỗi đường cong cubic Bézier:
 
 1. **Chuyển toạ độ sai phân sang hệ trục elip quay:**
-   $$\begin{bmatrix} x_1' \\ y_1' \end{bmatrix} = \begin{bmatrix} \cos\phi & \sin\phi \\ -\sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} \frac{x_1 - x_2}{2} \\ \frac{y_1 - y_2}{2} \end{bmatrix}$$
+
+   ```math
+   \begin{bmatrix} x_1' \\ y_1' \end{bmatrix} = \begin{bmatrix} \cos\phi & \sin\phi \\ -\sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} \frac{x_1 - x_2}{2} \\ \frac{y_1 - y_2}{2} \end{bmatrix}
+   ```
 
 2. **Kiểm tra và tự động co giãn bán kính nếu không đủ lớn:**
-   $$\Lambda = \frac{{x_1'}^2}{r_x^2} + \frac{{y_1'}^2}{r_y^2}$$
-   Nếu $\Lambda > 1$, cung elip không thể đi qua hai điểm với bán kính hiện tại. Chuẩn W3C quy định tự động co giãn:
-   $$r_x \leftarrow \sqrt{\Lambda} \, r_x, \quad r_y \leftarrow \sqrt{\Lambda} \, r_y$$
 
-3. **Tính toạ độ tâm trong hệ trục quay $(c_x', c_y')$:**
-   $$\begin{bmatrix} c_x' \\ c_y' \end{bmatrix} = \pm \sqrt{\max\left(0, \frac{r_x^2 r_y^2 - r_x^2 {y_1'}^2 - r_y^2 {x_1'}^2}{r_x^2 {y_1'}^2 + r_y^2 {x_1'}^2}\right)} \begin{bmatrix} \frac{r_x y_1'}{r_y} \\ -\frac{r_y x_1'}{r_x} \end{bmatrix}$$
-   Quy tắc dấu: Chọn dấu $+$ nếu $f_A \neq f_S$, chọn dấu $-$ nếu $f_A = f_S$.
+   ```math
+   \Lambda = \frac{(x_1')^2}{r_x^2} + \frac{(y_1')^2}{r_y^2}
+   ```
 
-4. **Chuyển tâm về hệ toạ độ thế giới ban đầu $(c_x, c_y)$:**
-   $$\begin{bmatrix} c_x \\ c_y \end{bmatrix} = \begin{bmatrix} \cos\phi & -\sin\phi \\ \sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} + \begin{bmatrix} \frac{x_1 + x_2}{2} \\ \frac{y_1 + y_2}{2} \end{bmatrix}$$
+   Nếu $`\Lambda > 1`$, cung elip không thể đi qua hai điểm với bán kính hiện tại. Chuẩn W3C quy định tự động co giãn:
 
-5. **Xác định góc bắt đầu $\theta_1$ và góc quét $\Delta\theta$:**
-   Hàm tính góc có dấu giữa hai vector 2D $\mathbf{u}$ và $\mathbf{v}$:
-   $$\text{angle}(\mathbf{u}, \mathbf{v}) = \text{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)$$
+   ```math
+   r_x \leftarrow \sqrt{\Lambda} \, r_x, \quad r_y \leftarrow \sqrt{\Lambda} \, r_y
+   ```
+
+3. **Tính toạ độ tâm trong hệ trục quay $`(c_x', c_y')`$:**
+
+   ```math
+   \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} = \pm \sqrt{\max\left(0, \frac{r_x^2 r_y^2 - r_x^2 (y_1')^2 - r_y^2 (x_1')^2}{r_x^2 (y_1')^2 + r_y^2 (x_1')^2}\right)} \begin{bmatrix} \frac{r_x y_1'}{r_y} \\ -\frac{r_y x_1'}{r_x} \end{bmatrix}
+   ```
+
+   Quy tắc dấu: Chọn dấu $`+`$ nếu $`f_A \neq f_S`$, chọn dấu $`-`$ nếu $`f_A = f_S`$.
+
+4. **Chuyển tâm về hệ toạ độ thế giới ban đầu $`(c_x, c_y)`$:**
+
+   ```math
+   \begin{bmatrix} c_x \\ c_y \end{bmatrix} = \begin{bmatrix} \cos\phi & -\sin\phi \\ \sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} + \begin{bmatrix} \frac{x_1 + x_2}{2} \\ \frac{y_1 + y_2}{2} \end{bmatrix}
+   ```
+
+5. **Xác định góc bắt đầu $`\theta_1`$ và góc quét $`\Delta\theta`$:**
+
+   Hàm tính góc có dấu giữa hai vector 2D $`\mathbf{u}`$ và $`\mathbf{v}`$:
+
+   ```math
+   \operatorname{angle}(\mathbf{u}, \mathbf{v}) = \operatorname{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)
+   ```
+
    Từ đó tính góc bắt đầu và góc quét:
-   $$\theta_1 = \text{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \text{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)$$
-   Hiệu chỉnh góc quét theo cờ $f_S$:
-   - Nếu $f_S = 0$ và $\Delta\theta > 0$, thì $\Delta\theta \leftarrow \Delta\theta - 2\pi$.
-   - Nếu $f_S = 1$ và $\Delta\theta < 0$, thì $\Delta\theta \leftarrow \Delta\theta + 2\pi$.
+
+   ```math
+   \theta_1 = \operatorname{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \operatorname{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)
+   ```
+
+   Hiệu chỉnh góc quét theo cờ $`f_S`$:
+   - Nếu $`f_S = 0`$ và $`\Delta\theta > 0`$, thì $`\Delta\theta \leftarrow \Delta\theta - 2\pi`$.
+   - Nếu $`f_S = 1`$ và $`\Delta\theta < 0`$, thì $`\Delta\theta \leftarrow \Delta\theta + 2\pi`$.
 
 6. **Phân đoạn và xấp xỉ bằng cubic Bézier:**
-   Cung được chia thành $N = \lceil |\Delta\theta| / (\pi/2) \rceil$ phân đoạn góc nhỏ $\delta = \Delta\theta / N$. 
+
+   Cung được chia thành $`N = \lceil |\Delta\theta| / (\pi/2) \rceil`$ phân đoạn góc nhỏ $`\delta = \Delta\theta / N`$.
+
    Hệ số khoảng cách điểm điều khiển:
-   $$\alpha = \frac{4}{3} \tan\left(\frac{\delta}{4}\right)$$
-   Với mỗi góc $\theta$, toạ độ điểm trên elip và đạo hàm tiếp tuyến:
-   $$\mathbf{P}(\theta) = \begin{bmatrix} c_x + r_x \cos\theta \cos\phi - r_y \sin\theta \sin\phi \\ c_y + r_x \cos\theta \sin\phi + r_y \sin\theta \cos\phi \end{bmatrix}, \quad \mathbf{P}'(\theta) = \begin{bmatrix} -r_x \sin\theta \cos\phi - r_y \cos\theta \sin\phi \\ -r_x \sin\theta \sin\phi + r_y \cos\theta \cos\phi \end{bmatrix}$$
-   Hai điểm điều khiển cho từng phân đoạn từ $\theta$ đến $\theta + \delta$:
-   $$\mathbf{CP}_1 = \mathbf{P}(\theta) + \alpha \mathbf{P}'(\theta), \quad \mathbf{CP}_2 = \mathbf{P}(\theta + \delta) - \alpha \mathbf{P}'(\theta + \delta)$$
+
+   ```math
+   \alpha = \frac{4}{3} \tan\left(\frac{\delta}{4}\right)
+   ```
+
+   Với mỗi góc $`\theta`$, toạ độ điểm trên elip và đạo hàm tiếp tuyến:
+
+   ```math
+   \mathbf{P}(\theta) = \begin{bmatrix} c_x + r_x \cos\theta \cos\phi - r_y \sin\theta \sin\phi \\ c_y + r_x \cos\theta \sin\phi + r_y \sin\theta \cos\phi \end{bmatrix}, \quad \mathbf{P}'(\theta) = \begin{bmatrix} -r_x \sin\theta \cos\phi - r_y \cos\theta \sin\phi \\ -r_x \sin\theta \sin\phi + r_y \cos\theta \cos\phi \end{bmatrix}
+   ```
+
+   Hai điểm điều khiển cho từng phân đoạn từ $`\theta`$ đến $`\theta + \delta`$:
+
+   ```math
+   \mathbf{CP}_1 = \mathbf{P}(\theta) + \alpha \mathbf{P}'(\theta), \quad \mathbf{CP}_2 = \mathbf{P}(\theta + \delta) - \alpha \mathbf{P}'(\theta + \delta)
+   ```
 
 ---
 
 ### 2.2. Tính toán tight bounding box qua nghiệm đạo hàm giải tích
 
-Hộp bao chính xác (tight axis-aligned bounding box) của đường cong Bézier không thể lấy từ hộp bao của các điểm điều khiển (control hull) do phần lồi thực tế của đường cong thường nhỏ hơn đa giác điều khiển. Hệ thống tìm nghiệm giải tích của phương trình đạo hàm $\mathbf{B}'(t) = \mathbf{0}$ trên khoảng mở $t \in (0, 1)$:
+Hộp bao chính xác (tight axis-aligned bounding box) của đường cong Bézier không thể lấy từ hộp bao của các điểm điều khiển (control hull) do phần lồi thực tế của đường cong thường nhỏ hơn đa giác điều khiển. Hệ thống tìm nghiệm giải tích của phương trình đạo hàm $`\mathbf{B}'(t) = \mathbf{0}`$ trên khoảng mở $`t \in (0, 1)`$:
 
 #### Đối với Quadratic Bézier:
+
 Phương trình tham số bậc hai:
-$$\mathbf{B}(t) = (1-t)^2 \mathbf{P}_0 + 2(1-t)t \mathbf{P}_1 + t^2 \mathbf{P}_2, \quad t \in [0, 1]$$
-Đạo hàm bậc nhất theo $t$:
-$$\mathbf{B}'(t) = 2(1-t)(\mathbf{P}_1 - \mathbf{P}_0) + 2t(\mathbf{P}_2 - \mathbf{P}_1) = 2(\mathbf{P}_0 - 2\mathbf{P}_1 + \mathbf{P}_2)t + 2(\mathbf{P}_1 - \mathbf{P}_0)$$
+
+```math
+\mathbf{B}(t) = (1-t)^2 \mathbf{P}_0 + 2(1-t)t \mathbf{P}_1 + t^2 \mathbf{P}_2, \quad t \in [0, 1]
+```
+
+Đạo hàm bậc nhất theo $`t`$:
+
+```math
+\mathbf{B}'(t) = 2(1-t)(\mathbf{P}_1 - \mathbf{P}_0) + 2t(\mathbf{P}_2 - \mathbf{P}_1) = 2(\mathbf{P}_0 - 2\mathbf{P}_1 + \mathbf{P}_2)t + 2(\mathbf{P}_1 - \mathbf{P}_0)
+```
+
 Nghiệm cực trị trên từng trục độc lập:
-$$t^* = \frac{P_0 - P_1}{P_0 - 2P_1 + P_2}$$
-Nếu mẫu số khác không và $t^* \in (0, 1)$, giá trị $\mathbf{B}(t^*)$ được đưa vào tập điểm ứng viên cùng với $\mathbf{B}(0)$ và $\mathbf{B}(1)$ để lấy $\min$ và $\max$.
+
+```math
+t^* = \frac{P_0 - P_1}{P_0 - 2P_1 + P_2}
+```
+
+Nếu mẫu số khác không và $`t^* \in (0, 1)`$, giá trị $`\mathbf{B}(t^*)`$ được đưa vào tập điểm ứng viên cùng với $`\mathbf{B}(0)`$ và $`\mathbf{B}(1)`$ để lấy $`\min`$ và $`\max`$.
 
 #### Đối với Cubic Bézier:
+
 Phương trình tham số bậc ba:
-$$\mathbf{B}(t) = (1-t)^3 \mathbf{P}_0 + 3(1-t)^2 t \mathbf{P}_1 + 3(1-t)t^2 \mathbf{P}_2 + t^3 \mathbf{P}_3, \quad t \in [0, 1]$$
-Đạo hàm bậc nhất theo $t$:
-$$\mathbf{B}'(t) = 3(1-t)^2(\mathbf{P}_1 - \mathbf{P}_0) + 6(1-t)t(\mathbf{P}_2 - \mathbf{P}_1) + 3t^2(\mathbf{P}_3 - \mathbf{P}_2) = \mathbf{A} t^2 + \mathbf{B} t + \mathbf{C} = \mathbf{0}$$
+
+```math
+\mathbf{B}(t) = (1-t)^3 \mathbf{P}_0 + 3(1-t)^2 t \mathbf{P}_1 + 3(1-t)t^2 \mathbf{P}_2 + t^3 \mathbf{P}_3, \quad t \in [0, 1]
+```
+
+Đạo hàm bậc nhất theo $`t`$:
+
+```math
+\mathbf{B}'(t) = 3(1-t)^2(\mathbf{P}_1 - \mathbf{P}_0) + 6(1-t)t(\mathbf{P}_2 - \mathbf{P}_1) + 3t^2(\mathbf{P}_3 - \mathbf{P}_2) = \mathbf{A} t^2 + \mathbf{B} t + \mathbf{C} = \mathbf{0}
+```
+
 Trong đó các hệ số cho từng trục:
-$$\begin{cases} A = 3(-P_0 + 3P_1 - 3P_2 + P_3) \\ B = 6(P_0 - 2P_1 + P_2) \\ C = 3(P_1 - P_0) \end{cases}$$
-1. Nếu $A = 0$ và $B \neq 0$: nghiệm suy biến phương trình bậc nhất $t = -C / B$.
-2. Nếu $A \neq 0$: biệt thức $\Delta = B^2 - 4AC$. Nếu $\Delta \ge 0$, hai nghiệm là:
-   $$t_{1, 2} = \frac{-B \pm \sqrt{\Delta}}{2A}$$
-Tất cả các nghiệm $t_k \in (0, 1)$ cùng với $t = 0$ và $t = 1$ tạo thành tập giá trị cực trị giải tích để tính chính xác biên $[x_{\min}, x_{\max}] \times [y_{\min}, y_{\max}]$.
+
+```math
+\begin{cases} A = 3(-P_0 + 3P_1 - 3P_2 + P_3) \\ B = 6(P_0 - 2P_1 + P_2) \\ C = 3(P_1 - P_0) \end{cases}
+```
+
+1. Nếu $`A = 0`$ và $`B \neq 0`$: nghiệm suy biến phương trình bậc nhất $`t = -C / B`$.
+2. Nếu $`A \neq 0`$: biệt thức $`\Delta = B^2 - 4AC`$. Nếu $`\Delta \ge 0`$, hai nghiệm là:
+
+   ```math
+   t_{1, 2} = \frac{-B \pm \sqrt{\Delta}}{2A}
+   ```
+
+Tất cả các nghiệm $`t_k \in (0, 1)`$ cùng với $`t = 0`$ và $`t = 1`$ tạo thành tập giá trị cực trị giải tích để tính chính xác biên $`[x_{\min}, x_{\max}] \times [y_{\min}, y_{\max}]`$.
 
 ---
 
 ### 2.3. Nâng bậc đường cong quadratic sang cubic Bézier
 
-Để thống nhất biểu diễn hình học, đường cong bậc hai với các điểm $(\mathbf{P}_0, \mathbf{P}_1, \mathbf{P}_2)$ được nâng bậc chính xác thành đường cong bậc ba $(\mathbf{C}_0, \mathbf{C}_1, \mathbf{C}_2, \mathbf{C}_3)$ bằng cách nhân với đa thức đồng nhất $(1-t) + t = 1$:
-$$\mathbf{C}_0 = \mathbf{P}_0, \quad \mathbf{C}_1 = \mathbf{P}_0 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_0), \quad \mathbf{C}_2 = \mathbf{P}_2 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_2), \quad \mathbf{C}_3 = \mathbf{P}_2$$
+Để thống nhất biểu diễn hình học, đường cong bậc hai với các điểm $`(\mathbf{P}_0, \mathbf{P}_1, \mathbf{P}_2)`$ được nâng bậc chính xác thành đường cong bậc ba $`(\mathbf{C}_0, \mathbf{C}_1, \mathbf{C}_2, \mathbf{C}_3)`$ bằng cách nhân với đa thức đồng nhất $`(1-t) + t = 1`$:
+
+```math
+\mathbf{C}_0 = \mathbf{P}_0, \quad \mathbf{C}_1 = \mathbf{P}_0 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_0), \quad \mathbf{C}_2 = \mathbf{P}_2 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_2), \quad \mathbf{C}_3 = \mathbf{P}_2
+```
 
 ---
 
 ### 2.4. Phản chiếu điểm điều khiển cho các lệnh mượt (S/s và T/t)
 
-Đối với các lệnh cong tiếp tuyến mượt `S`/`s` (cubic) và `T`/`t` (quadratic), điểm điều khiển đầu tiên $\mathbf{CP}_{\text{reflected}}$ được lấy đối xứng qua điểm hiện tại $\mathbf{P}_0$ từ điểm điều khiển cuối cùng $\mathbf{CP}_{\text{last}}$ của lệnh liền trước:
-$$\mathbf{CP}_{\text{reflected}} = \mathbf{P}_0 + (\mathbf{P}_0 - \mathbf{CP}_{\text{last}}) = 2 \mathbf{P}_0 - \mathbf{CP}_{\text{last}}$$
-Nếu lệnh liền trước không phải là lệnh cong cùng bậc, điểm phản chiếu suy biến thành chính $\mathbf{P}_0$.
+Đối với các lệnh cong tiếp tuyến mượt `S`/`s` (cubic) và `T`/`t` (quadratic), điểm điều khiển đầu tiên $`\mathbf{CP}_{\text{reflected}}`$ được lấy đối xứng qua điểm hiện tại $`\mathbf{P}_0`$ từ điểm điều khiển cuối cùng $`\mathbf{CP}_{\text{last}}`$ của lệnh liền trước:
+
+```math
+\mathbf{CP}_{\text{reflected}} = \mathbf{P}_0 + (\mathbf{P}_0 - \mathbf{CP}_{\text{last}}) = 2 \mathbf{P}_0 - \mathbf{CP}_{\text{last}}
+```
+
+Nếu lệnh liền trước không phải là lệnh cong cùng bậc, điểm phản chiếu suy biến thành chính $`\mathbf{P}_0`$.
 
 ---
 
 ### 2.5. Đại số tuyến tính ma trận biến đổi affine 2D
 
-Mọi phép biến đổi phẳng 2D (tịnh tiến, quay, co giãn, xiên trục) được mô tả qua ma trận toạ độ thuần nhất $3 \times 3$:
-$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \iff \begin{cases} x' = ax + cy + e \\ y' = bx + dy + f \end{cases}$$
+Mọi phép biến đổi phẳng 2D (tịnh tiến, quay, co giãn, xiên trục) được mô tả qua ma trận toạ độ thuần nhất $`3 \times 3`$:
 
-Định thức ma trận là $\det(M) = ad - bc$. Ma trận nghịch đảo $M^{-1}$ tồn tại khi và chỉ khi $\det(M) \neq 0$:
-$$M^{-1} = \begin{bmatrix} \frac{d}{ad - bc} & \frac{-c}{ad - bc} & \frac{cf - de}{ad - bc} \\ \frac{-b}{ad - bc} & \frac{a}{ad - bc} & \frac{be - af}{ad - bc} \\ 0 & 0 & 1 \end{bmatrix}$$
+```math
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \iff \begin{cases} x' = ax + cy + e \\ y' = bx + dy + f \end{cases}
+```
 
-Phép nhân hai ma trận biến đổi $M_1 \times M_2$ tương ứng với việc áp dụng phép biến đổi $M_2$ trước, sau đó áp dụng phép biến đổi $M_1$.
+Định thức ma trận là $`\det(M) = ad - bc`$. Ma trận nghịch đảo $`M^{-1}`$ tồn tại khi và chỉ khi $`\det(M) \neq 0`$:
+
+```math
+M^{-1} = \begin{bmatrix} \frac{d}{ad - bc} & \frac{-c}{ad - bc} & \frac{cf - de}{ad - bc} \\ \frac{-b}{ad - bc} & \frac{a}{ad - bc} & \frac{be - af}{ad - bc} \\ 0 & 0 & 1 \end{bmatrix}
+```
+
+Phép nhân hai ma trận biến đổi $`M_1 \times M_2`$ tương ứng với việc áp dụng phép biến đổi $`M_2`$ trước, sau đó áp dụng phép biến đổi $`M_1`$.
 
 ---
 
