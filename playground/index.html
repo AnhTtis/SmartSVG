@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartSVG Studio</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app" class="ide-container">
+    <!-- 1. TOP TOOLBAR -->
+    <header class="toolbar">
+      <div class="toolbar-group">
+        <span class="logo">SmartSVG Studio</span>
+        <label class="btn btn-primary file-upload-label">
+          Open SVG
+          <input type="file" id="file-input" accept=".svg" style="display: none;" />
+        </label>
+        <button id="btn-export-svg" class="btn">Export SVG</button>
+        <button id="btn-export-png" class="btn">Export PNG</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button id="tool-select" class="btn active" title="Select Tool (V)">Select</button>
+        <button id="tool-pan" class="btn" title="Pan Canvas (H / Space)">Pan</button>
+        <div class="divider"></div>
+        <button id="btn-undo" class="btn" title="Undo (Ctrl+Z)">Undo</button>
+        <button id="btn-redo" class="btn" title="Redo (Ctrl+Y)">Redo</button>
+      </div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">Paper:</span>
+        <button id="bg-white" class="btn active" title="White Background">White</button>
+        <button id="bg-checker" class="btn" title="Checkerboard Grid">Grid</button>
+        <button id="bg-dark" class="btn" title="Dark Background">Dark</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button id="btn-zoom-out" class="btn" title="Zoom Out (-)">-</button>
+        <span id="zoom-level" class="zoom-text">100%</span>
+        <button id="btn-zoom-in" class="btn" title="Zoom In (+)">+</button>
+        <button id="btn-zoom-reset" class="btn" title="Fit to Screen (0)">Fit</button>
+      </div>
+    </header>
+
+    <!-- 2. MAIN BODY (3 COLUMNS) -->
+    <main class="workbench">
+      <!-- LEFT SIDEBAR: Dropzone & Layers -->
+      <aside class="sidebar left-sidebar">
+        <div class="panel-section">
+          <h3 class="section-title">Import File</h3>
+          <div id="drop-zone" class="drop-zone">
+            <p class="drop-title">Drop SVG file here</p>
+            <span class="drop-hint">or click to browse from computer</span>
+          </div>
+        </div>
+
+        <div class="panel-section flex-grow">
+          <h3 class="section-title">Scene Graph</h3>
+          <div id="layers-tree" class="layers-tree">
+            <p class="empty-state">No SVG document loaded</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER WORKSPACE: Canvas & Rulers -->
+      <section class="canvas-workspace">
+        <div id="canvas-container" class="canvas-container">
+          <!-- Main Stage SVG -->
+          <svg id="svg-stage" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid-pattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="1" />
+              </pattern>
+              <pattern id="checker-pattern" width="16" height="16" patternUnits="userSpaceOnUse">
+                <rect width="8" height="8" fill="#e2e8f0" />
+                <rect x="8" width="8" height="8" fill="#ffffff" />
+                <rect y="8" width="8" height="8" fill="#ffffff" />
+                <rect x="8" y="8" width="8" height="8" fill="#e2e8f0" />
+              </pattern>
+            </defs>
+            <!-- Background Canvas Grid -->
+            <rect id="grid-background" width="100%" height="100%" fill="url(#grid-pattern)" />
+            <!-- Viewport Transformation Matrix Layer -->
+            <g id="viewport-root">
+              <g id="scene-layer"></g>
+            </g>
+            <!-- Bounding Box & Transform Handles Layer -->
+            <g id="gizmo-layer"></g>
+          </svg>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <footer class="status-bar">
+          <span>Cursor: <b id="stat-coords">X: 0 | Y: 0</b></span>
+          <span>ViewBox: <b id="stat-viewport">0 × 0</b></span>
+          <span>Selected: <b id="stat-selection">None</b></span>
+        </footer>
+      </section>
+
+      <!-- RIGHT SIDEBAR: Statistics & Property Inspector -->
+      <aside class="sidebar right-sidebar">
+        <!-- Tab Headers -->
+        <div class="tab-headers">
+          <button class="tab-btn active" data-tab="stats-tab">Statistics</button>
+          <button class="tab-btn" data-tab="props-tab">Inspector</button>
+        </div>
+
+        <!-- TAB 1: Statistics -->
+        <div id="stats-tab" class="tab-content active">
+          <!-- Card 1: Node Distribution -->
+          <div class="stat-card">
+            <h4>Node Distribution</h4>
+            <div id="stat-node-counts" class="stat-grid">
+              <div class="stat-item"><span class="label">Total:</span><span class="value" id="val-total-nodes">0</span></div>
+              <div class="stat-item"><span class="label">Paths:</span><span class="value" id="val-paths">0</span></div>
+              <div class="stat-item"><span class="label">Groups:</span><span class="value" id="val-groups">0</span></div>
+              <div class="stat-item"><span class="label">Shapes:</span><span class="value" id="val-shapes">0</span></div>
+              <div class="stat-item"><span class="label">Gradients:</span><span class="value" id="val-gradients">0</span></div>
+              <div class="stat-item"><span class="label">Depth:</span><span class="value" id="val-max-depth">0</span></div>
+            </div>
+          </div>
+
+          <!-- Card 2: Color Palette -->
+          <div class="stat-card">
+            <h4>Color Palette (<span id="val-unique-colors">0</span>)</h4>
+            <div id="stat-palette" class="palette-container">
+              <p class="empty-state">No color data</p>
+            </div>
+          </div>
+
+          <!-- Card 3: Geometric Complexity -->
+          <div class="stat-card">
+            <h4>Geometric Complexity</h4>
+            <ul class="stat-list">
+              <li><span>Total Vertices:</span><b id="val-vertices">0</b></li>
+              <li><span>Linear Segments:</span><b id="val-linear-seg">0</b></li>
+              <li><span>Cubic Béziers (C/S):</span><b id="val-cubic-beziers">0</b></li>
+              <li><span>Quad Béziers (Q/T):</span><b id="val-quad-beziers">0</b></li>
+              <li><span>Elliptical Arcs (A):</span><b id="val-arcs">0</b></li>
+              <li><span>Bounding Box:</span><b id="val-bbox">0 × 0</b></li>
+              <li><span>Aspect Ratio:</span><b id="val-aspect-ratio">0</b></li>
+            </ul>
+          </div>
+
+          <!-- Card 4: Health & Optimization Suggestions -->
+          <div class="stat-card">
+            <h4>Health & Optimization</h4>
+            <div id="stat-suggestions" class="suggestions-list">
+              <p class="empty-state">No file loaded</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Property Inspector -->
+        <div id="props-tab" class="tab-content">
+          <div class="inspector-group">
+            <h4>Transform & Geometry</h4>
+            <div class="input-row">
+              <label>X: <input type="number" id="prop-x" disabled /></label>
+              <label>Y: <input type="number" id="prop-y" disabled /></label>
+            </div>
+            <div class="input-row">
+              <label>W: <input type="number" id="prop-w" disabled /></label>
+              <label>H: <input type="number" id="prop-h" disabled /></label>
+            </div>
+          </div>
+
+          <div class="inspector-group">
+            <h4>Appearance & Styles</h4>
+            <div class="input-row">
+              <label>Fill: <input type="color" id="prop-fill" disabled value="#ffffff" /></label>
+              <label>Opacity: <input type="range" id="prop-opacity" min="0" max="1" step="0.05" value="1" disabled /></label>
+            </div>
+            <div class="input-row">
+              <label>Stroke: <input type="color" id="prop-stroke" disabled value="#000000" /></label>
+              <label>Width: <input type="number" id="prop-stroke-width" min="0" max="50" disabled value="1" /></label>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

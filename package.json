@@ -1,0 +1,31 @@
+{
+  "name": "smartsvg",
+  "version": "1.0.0",
+  "description": "A small project on how AI analyze the data and try to render the chart by SVG",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnhTtis/SmartSVG.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/AnhTtis/SmartSVG/issues"
+  },
+  "homepage": "https://github.com/AnhTtis/SmartSVG#readme",
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "happy-dom": "^20.11.8",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  }
+}
