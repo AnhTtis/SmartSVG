@@ -1,6 +1,6 @@
 # SmartSVG Engine & Vector Graphics Studio
 
-> **Thư viện SVG Engine chuẩn W3C SVG 1.1 & SVG 2 viết bằng TypeScript từ con số 0, tích hợp Vector Graphics Studio IDE tương tác thời gian thực.**
+> Thư viện SVG Engine chuẩn W3C SVG 1.1 và SVG 2 viết bằng TypeScript từ con số 0, tích hợp công cụ đồ hoạ vector tương tác thời gian thực.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF.svg)](https://vitejs.dev/)
@@ -10,89 +10,227 @@
 
 ---
 
-## Mục Lục (Table of Contents)
-1. [Giới Thiệu Tổng Quan](#1-giới-thiệu-tổng-quan)
-2. [Tính Năng Nổi Bật](#2-tính-năng-nổi-bật)
-3. [Hướng Dẫn Cài Đặt & Chạy Dự Án](#3-hướng-dẫn-cài-đặt--chạy-dự-án)
-4. [Kiến Trúc OOP & Design Patterns Chuyên Sâu](#4-kiến-trúc-oop--design-patterns-chuyên-sâu)
-   - [4.1. Tầng Toán Học & Nền Tảng (Core Layer)](#41-tầng-toán-học--nền-tảng-core-layer)
-   - [4.2. Tầng Cây Cú Pháp Trừu Tượng (AST Scene Graph Layer)](#42-tầng-cây-cú-pháp-trừu-tượng-ast-scene-graph-layer)
-   - [4.3. Tầng Phân Tích Cú Pháp (Parser & Compiler Layer)](#43-tầng-phân-tích-cú-pháp-parser--compiler-layer)
-   - [4.4. Tầng Phân Tích & Thống Kê (Analyzer Layer)](#44-tầng-phân-tích--thống-kê-analyzer-layer)
-   - [4.5. Tầng Xuất Bản & Serializer (Serializer Layer)](#45-tầng-xuất-bản--serializer-serializer-layer)
-   - [4.6. Tầng Viewport & Interactive IDE (Editor Layer)](#46-tầng-viewport--interactive-ide-editor-layer)
-5. [Cấu Trúc Thư Mục Dự Án](#5-cấu-trúc-thư-mục-dự-án)
-6. [Bộ Kiểm Thử Tự Động (Unit Testing)](#6-bộ-kiểm-thử-tự-động-unit-testing)
-7. [Bản Quyền (License)](#7-bản-quyền-license)
+## Mục lục
+1. [Giới thiệu tổng quan](#1-giới-thiệu-tổng-quan)
+2. [Cơ sở toán học và giải thuật hình học](#2-cơ-sở-toán-học-và-giải-thuật-hình-học)
+   - [2.1. Phân rã elliptical arc sang cubic Bézier (chuẩn W3C F.6)](#21-phân-rã-elliptical-arc-sang-cubic-bézier-chuẩn-w3c-f6)
+   - [2.2. Tính toán tight bounding box bằng nghiệm đạo hàm giải tích](#22-tính-toán-tight-bounding-box-bằng-nghiệm-đạo-hàm-giải-tích)
+   - [2.3. Nâng bậc đường cong quadratic sang cubic Bézier](#23-nâng-bậc-đường-cong-quadratic-sang-cubic-bézier)
+   - [2.4. Đối xứng điểm điều khiển cho lệnh mượt (S/s và T/t)](#24-đối-xứng-điểm-điều-khiển-cho-lệnh-mượt-ss-và-tt)
+   - [2.5. Ma trận biến đổi affine 2D và phép nghịch đảo](#25-ma-trận-biến-đổi-affine-2d-và-phép-nghịch-đảo)
+3. [Kiến trúc hướng đối tượng (OOP) và các mẫu thiết kế (design patterns)](#3-kiến-trúc-hướng-đối-tượng-oop-và-các-mẫu-thiết-kế-design-patterns)
+   - [3.1. Hiện thực bốn trụ cột OOP](#31-hiện-thực-bốn-trụ-cột-oop)
+   - [3.2. Các mẫu thiết kế (design patterns) áp dụng trong hệ thống](#32-các-mẫu-thiết-kế-design-patterns-áp-dụng-trong-hệ-thống)
+4. [Hướng dẫn cài đặt và chạy dự án](#4-hướng-dẫn-cài-đặt-và-chạy-dự-án)
+5. [Cấu trúc thư mục dự án](#5-cấu-trúc-thư-mục-dự-án)
+6. [Bộ kiểm thử tự động (unit testing)](#6-bộ-kiểm-thử-tự-động-unit-testing)
+7. [Bản quyền (license)](#7-bản-quyền-license)
 
 ---
 
-## 1. Giới Thiệu Tổng Quan
+## 1. Giới thiệu tổng quan
 
-**SmartSVG** là một hệ thống SVG Engine thuần TypeScript hoàn chỉnh, được xây dựng theo kiến trúc **Compiler & AST Scene Graph**. Engine hỗ trợ 100% đặc tả hình học và kiểu dáng của chuẩn **W3C SVG 1.1** và **SVG 2**, kết hợp cùng bộ giao diện phòng thí nghiệm đồ hoạ vector tương tác thời gian thực (**Vector Graphics Studio IDE**).
+SmartSVG là một hệ thống SVG Engine thuần TypeScript hoàn chỉnh, được xây dựng theo kiến trúc **trình biên dịch và cây cú pháp trừu tượng (Compiler & AST Scene Graph)**. Engine xử lý toàn diện các thành phần hình học, ma trận biến đổi, màu sắc, gradient kế thừa đa tầng và tầng cascading CSS của chuẩn W3C SVG 1.1 và SVG 2.
 
 ```text
 ========================================================================================
-                               SVG COMPILATION & PROCESSING PIPELINE
+                         LUỒNG BIÊN DỊCH VÀ XỬ LÝ SVG (PIPELINE)
 ========================================================================================
 
-                                  [ SVG File / String ]
+                                  [ Chuỗi / File SVG ]
                                            │
                                            ▼
                                       DOMParser
-                                (XML / SVG DOM Tree)
+                                  (Cây XML/SVG DOM)
                                            │
                                            ▼
-                                      SVG Parser
-                                (Normalizer & Resolver)
+                                      SVGParser
+                               (Chuẩn hoá và phân giải)
                                            │
                       ┌────────────────────┼────────────────────┐
                       ▼                    ▼                    ▼
-                 [ Geometry ]           [ Style ]          [ Metadata ]
-            • 10 Path Command Groups • Computed Styles   • Node IDs / Classes
-            • Analytic Bounding Box  • Gradients/Paints  • Hierarchy / Layers
-            • Affine 3x3 Matrix      • CSS Cascading     • Defs Registration
+                 [ Hình học ]         [ Kiểu dáng ]         [ Siêu dữ liệu ]
+            • 10 nhóm lệnh path    • Kiểu dáng tính toán • ID, class, layer
+            • Bounding box cực trị • Kế thừa gradient    • Cây phân cấp DOM
+            • Ma trận affine 3x3   • Phân cấp CSS        • Đăng ký defs
                       │                    │                    │
                       └────────────────────┼────────────────────┘
                                            ▼
                                       [ SVG AST ]
-                         (Abstract Syntax Tree / Scene Graph)
+                             (Cây cú pháp / Scene Graph)
                                            │
                       ┌────────────────────┴────────────────────┐
                       ▼                                         ▼
                 [ Analyzer ]                               [ Renderer ]
                       │                                         │
                       ▼                                         ▼
-               [ Statistics ]                            [ Modified SVG ]
-          • Element & Node Counts                    • Real-time Canvas (DOM)
-          • Color Palette & Gradients                • Viewport (Zoom / Pan / Fit)
-          • Path Complexity & Curves                 • Interactive 8-Handle Gizmo
-          • Geometric Bounds & Area                  • Clean XML Serialization
-          • Coverage Density                         • High-Res Export (SVG / PNG)
+               [ Thống kê ]                              [ SVG chỉnh sửa ]
+          • Đếm số lượng node                        • Canvas tương tác DOM
+          • Bảng màu và gradient                     • Điều khiển zoom/pan/fit
+          • Độ phức tạp đường cong                   • Khung gizmo 8 điểm neo
+          • Diện tích và hộp bao                     • Xuất XML SVG chuẩn hoá
+          • Mật độ phần tử đồ hoạ                    • Xuất ảnh PNG độ nét cao
 ```
 
 ---
 
-## 2. Tính Năng Nổi Bật
+## 2. Cơ sở toán học và giải thuật hình học
 
-- **Độ chính xác hình học W3C F.6 Arc**: Chuyển đổi chính xác tham số Arc tâm $(cx, cy, \theta_1, \Delta\theta)$, tự động scale bán kính $\Lambda > 1$ và phân rã thành chuỗi Cubic Bézier mượt mà ($\alpha = \frac{4}{3}\tan(\Delta\theta/4)$).
-- **Bounding Box giải tích chính xác tuyệt đối (Tight AABB)**: Tìm nghiệm đạo hàm $B'(t) = 0$ trên $(0, 1)$ cho Cubic và Quadratic Bézier thay vì lấy bao các điểm điều khiển (loose hull).
-- **Hệ thống kế thừa Gradient đa tầng (Multi-hop Inheritance)**: Tự động resolve chuỗi kế thừa `href`/`xlink:href` lồng nhau, kế thừa stops, toạ độ, `spreadMethod`, `gradientUnits`, `gradientTransform`, hỗ trợ bán kính tiêu cự $fr$ của SVG 2.
-- **CSS Cascading Engine đầy đủ**: Phân cấp ưu tiên `Inherited Style < <style> Rules < Presentation Attributes < Inline CSS`. Hỗ trợ 148 màu chuẩn W3C, Hex (3/4/6/8 số), RGB, HSL và kênh Alpha.
-- **W3C Path Lexer nén**: Đọc chính xác toạ độ âm dính liền (`M10-20.5-30`), cờ Arc dính liền (`0150`), số mũ (`1e-4`), toạ độ lặp ngầm định.
-- **Giao diện IDE Vector Graphics Studio**:
-  - Infinite Canvas với Zoom tại vị trí chuột, Pan, Fit to Screen.
-  - Artboard Paper chuyển đổi 3 chế độ nền: Dark, Light, Transparent Checkerboard.
-  - Gizmo 8 handles tương tác co giãn và di chuyển trực tiếp trên canvas.
-  - Cây phân cấp Layer/Scene Graph.
-  - Bảng thống kê Complexity Analyzer & Color Palette.
-  - Bảng thuộc tính Property Inspector chỉnh sửa toạ độ, kích thước, màu sắc real-time.
-  - Quản lý lịch sử Undo / Redo.
-  - Xuất file `.svg` XML chuẩn hoá hoặc ảnh raster `.png` sắc nét.
+### 2.1. Phân rã elliptical arc sang cubic Bézier (chuẩn W3C F.6)
+
+Một cung elip trong SVG được định nghĩa bằng toạ độ điểm đầu $(x_1, y_1)$, điểm cuối $(x_2, y_2)$, hai bán kính $(r_x, r_y)$, góc nghiêng trục $\phi$, cờ cung lớn $f_A \in \{0, 1\}$ và cờ quét $f_S \in \{0, 1\}$. 
+
+Giải thuật W3C chuyển đổi từ tham số điểm cuối sang tham số tâm $(c_x, c_y, \theta_1, \Delta\theta)$ và phân rã thành chuỗi đường cong cubic Bézier:
+
+1. **Chuyển đổi toạ độ sang hệ trục elip quay:**
+   $$\begin{bmatrix} x_1' \\ y_1' \end{bmatrix} = \begin{bmatrix} \cos\phi & \sin\phi \\ -\sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} \frac{x_1 - x_2}{2} \\ \frac{y_1 - y_2}{2} \end{bmatrix}$$
+
+2. **Kiểm tra và tự động hiệu chỉnh tỉ lệ bán kính:**
+   $$\Lambda = \frac{{x_1'}^2}{r_x^2} + \frac{{y_1'}^2}{r_y^2}$$
+   Nếu $\Lambda > 1$, bán kính được co giãn để đi qua hai điểm:
+   $$r_x \leftarrow \sqrt{\Lambda} \, r_x, \quad r_y \leftarrow \sqrt{\Lambda} \, r_y$$
+
+3. **Tính toạ độ tâm trong hệ trục quay $(c_x', c_y')$:**
+   $$\begin{bmatrix} c_x' \\ c_y' \end{bmatrix} = \pm \sqrt{\max\left(0, \frac{r_x^2 r_y^2 - r_x^2 {y_1'}^2 - r_y^2 {x_1'}^2}{r_x^2 {y_1'}^2 + r_y^2 {x_1'}^2}\right)} \begin{bmatrix} \frac{r_x y_1'}{r_y} \\ -\frac{r_y x_1'}{r_x} \end{bmatrix}$$
+   Dấu chọn là $+$ nếu $f_A \neq f_S$, và dấu $-$ nếu $f_A = f_S$.
+
+4. **Chuyển tâm về hệ toạ độ thế giới ban đầu $(c_x, c_y)$:**
+   $$\begin{bmatrix} c_x \\ c_y \end{bmatrix} = \begin{bmatrix} \cos\phi & -\sin\phi \\ \sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} + \begin{bmatrix} \frac{x_1 + x_2}{2} \\ \frac{y_1 + y_2}{2} \end{bmatrix}$$
+
+5. **Xác định góc bắt đầu $\theta_1$ và góc quét $\Delta\theta$:**
+   $$\theta_1 = \text{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \text{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right) \pmod{2\pi}$$
+   Nếu $f_S = 0$ và $\Delta\theta > 0$ thì $\Delta\theta \leftarrow \Delta\theta - 2\pi$. Nếu $f_S = 1$ và $\Delta\theta < 0$ thì $\Delta\theta \leftarrow \Delta\theta + 2\pi$.
+
+6. **Phân đoạn và xấp xỉ bằng cubic Bézier:**
+   Cung được chia thành $N = \lceil |\Delta\theta| / (\pi/2) \rceil$ phân đoạn góc $\delta = \Delta\theta / N$. Hệ số khoảng cách điểm điều khiển tối ưu:
+   $$\alpha = \frac{4}{3} \tan\left(\frac{\delta}{4}\right)$$
+   Với mỗi phân đoạn bắt đầu từ góc $\theta$, điểm trên elip và vector đạo hàm tiếp tuyến:
+   $$\mathbf{P}(t) = \begin{bmatrix} c_x + r_x \cos t \cos\phi - r_y \sin t \sin\phi \\ c_y + r_x \cos t \sin\phi + r_y \sin t \cos\phi \end{bmatrix}, \quad \mathbf{P}'(t) = \begin{bmatrix} -r_x \sin t \cos\phi - r_y \cos t \sin\phi \\ -r_x \sin t \sin\phi + r_y \cos t \cos\phi \end{bmatrix}$$
+   Hai điểm điều khiển của đoạn cubic Bézier tương ứng là:
+   $$\mathbf{CP}_1 = \mathbf{P}(\theta) + \alpha \mathbf{P}'(\theta), \quad \mathbf{CP}_2 = \mathbf{P}(\theta + \delta) - \alpha \mathbf{P}'(\theta + \delta)$$
 
 ---
 
-## 3. Hướng Dẫn Cài Đặt & Chạy Dự Án
+### 2.2. Tính toán tight bounding box bằng nghiệm đạo hàm giải tích
+
+Hộp bao chính xác của đường cong không thể lấy đơn thuần từ các điểm điều khiển (control point hull) vì sẽ bị dư thừa diện tích. Hệ thống tìm cực trị cục bộ bằng nghiệm của đạo hàm bậc nhất trên khoảng $t \in (0, 1)$:
+
+#### Quadratic Bézier:
+Phương trình tham số:
+$$\mathbf{B}(t) = (1-t)^2 \mathbf{P}_0 + 2(1-t)t \mathbf{P}_1 + t^2 \mathbf{P}_2, \quad t \in [0, 1]$$
+Đạo hàm bậc nhất theo $t$:
+$$\mathbf{B}'(t) = 2(1-t)(\mathbf{P}_1 - \mathbf{P}_0) + 2t(\mathbf{P}_2 - \mathbf{P}_1) = 2(\mathbf{P}_0 - 2\mathbf{P}_1 + \mathbf{P}_2)t + 2(\mathbf{P}_1 - \mathbf{P}_0)$$
+Nghiệm cực trị cho từng trục $x$ và $y$:
+$$t^* = \frac{P_0 - P_1}{P_0 - 2P_1 + P_2}$$
+Nếu $t^* \in (0, 1)$, tập giá trị kiểm tra là $\{B(0), B(1), B(t^*)\}$.
+
+#### Cubic Bézier:
+Phương trình tham số:
+$$\mathbf{B}(t) = (1-t)^3 \mathbf{P}_0 + 3(1-t)^2 t \mathbf{P}_1 + 3(1-t)t^2 \mathbf{P}_2 + t^3 \mathbf{P}_3, \quad t \in [0, 1]$$
+Đạo hàm bậc nhất theo $t$ là phương trình bậc hai:
+$$\mathbf{B}'(t) = 3(-\mathbf{P}_0 + 3\mathbf{P}_1 - 3\mathbf{P}_2 + \mathbf{P}_3)t^2 + 6(\mathbf{P}_0 - 2\mathbf{P}_1 + \mathbf{P}_2)t + 3(\mathbf{P}_1 - \mathbf{P}_0) = 0$$
+Đặt:
+$$a = 3(-P_0 + 3P_1 - 3P_2 + P_3), \quad b = 6(P_0 - 2P_1 + P_2), \quad c = 3(P_1 - P_0)$$
+Các nghiệm thực $t = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ nằm trong khoảng $(0, 1)$ được đưa vào tập kiểm tra cùng với $B(0)$ và $B(1)$ để xác định chính xác $\min$ và $\max$.
+
+---
+
+### 2.3. Nâng bậc đường cong quadratic sang cubic Bézier
+
+Để đồng nhất xử lý hình học và render, đường cong bậc hai (quadratic) với điểm đầu $\mathbf{P}_0$, điểm điều khiển $\mathbf{P}_1$, điểm cuối $\mathbf{P}_2$ được nâng lên đường cong bậc ba (cubic) tương đương chính xác về mặt hình học:
+$$\mathbf{CP}_1 = \mathbf{P}_0 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_0), \quad \mathbf{CP}_2 = \mathbf{P}_2 + \frac{2}{3}(\mathbf{P}_1 - \mathbf{P}_2)$$
+
+---
+
+### 2.4. Đối xứng điểm điều khiển cho lệnh mượt (S/s và T/t)
+
+Chuẩn W3C quy định lệnh tiếp tuyến mượt `S`/`s` (cubic) và `T`/`t` (quadratic) tự động phản chiếu điểm điều khiển cuối cùng của lệnh trước đó qua điểm hiện tại $\mathbf{P}_0$:
+$$\mathbf{CP}_{\text{reflected}} = 2 \mathbf{P}_0 - \mathbf{CP}_{\text{last}}$$
+Nếu lệnh đứng liền trước không phải là lệnh cong cùng bậc, điểm điều khiển phản chiếu sẽ suy biến trùng với điểm hiện tại $\mathbf{P}_0$.
+
+---
+
+### 2.5. Ma trận biến đổi affine 2D và phép nghịch đảo
+
+Mọi phép biến đổi trong không gian 2D được biểu diễn qua ma trận thuần nhất $3 \times 3$:
+$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \implies \begin{cases} x' = ax + cy + e \\ y' = bx + dy + f \end{cases}$$
+
+Định thức ma trận $\det(M) = ad - bc$. Khi $\det(M) \neq 0$, ma trận nghịch đảo $M^{-1}$ được tính bởi:
+$$M^{-1} = \frac{1}{ad - bc} \begin{bmatrix} d & -c & cf - de \\ -b & a & be - af \\ 0 & 0 & ad - bc \end{bmatrix}$$
+
+---
+
+## 3. Kiến trúc hướng đối tượng (OOP) và các mẫu thiết kế (design patterns)
+
+Hệ thống được thiết kế theo chuẩn module hoá, tuân thủ nguyên lý thiết kế SOLID và vận dụng chặt chẽ các đặc tính của lập trình hướng đối tượng:
+
+```text
+svgEngine/
+├── core/         ──> [Toán học 2D, Path Commands, Style, Transforms, Paints]
+├── ast/          ──> [Cây cú pháp trừu tượng AST, 22+ class node theo chuẩn W3C]
+├── parser/       ──> [Lexer, Tokenizer, Multi-hop Resolver, CSS Cascader]
+├── analyzer/     ──> [Visitor/Metrics Engine: Bảng màu, độ phức tạp, diện tích]
+├── serializer/   ──> [Biên dịch AST sang XML SVG và vẽ lên canvas xuất PNG]
+└── viewer/       ──> [Quản lý viewport matrix, infinite canvas, artboard mode]
+```
+
+---
+
+### 3.1. Hiện thực bốn trụ cột OOP
+
+#### 1. Tính đóng gói (Encapsulation)
+- Mỗi đối tượng hình học (`Vector2D`, `Matrix2D`, `BoundingBox`, `Color`, `SVGLength`) tự đóng gói trạng thái nội tại và bảo vệ tính bất biến (immutability) ở các thao tác toán học cơ bản.
+- Thuật toán giải nghiệm đạo hàm tìm hộp bao và thuật toán lượng giác W3C F.6 được đóng gói hoàn toàn bên trong các phương thức `getBounds()` và `toCubicBeziers()`, che giấu độ phức tạp khỏi người dùng thư viện.
+- Trạng thái của một node được chia thành ba khối độc lập có phạm vi rõ ràng: `Geometry`, `Style` và `Metadata`.
+
+#### 2. Tính kế thừa (Inheritance)
+- **Hệ thống node AST:** Lớp trừu tượng cơ sở `ASTNode` (`ast/ast-node.ts`) định nghĩa các thuộc tính và phương thức chung (quản lý quan hệ cha-con, ma trận thế giới, biến đổi, clone, duyệt cây). Các lớp cụ thể kế thừa trực tiếp:
+  - Nhóm chứa: `RootNode`, `GroupNode`, `SymbolNode`, `AnchorNode`.
+  - Nhóm hình học cơ bản: `RectNode`, `CircleNode`, `EllipseNode`, `LineNode`, `PolylineNode`, `PolygonNode`.
+  - Nhóm đường cong tự do: `PathNode`.
+  - Nhóm văn bản: `TextNode`, `TSpanNode`, `TextPathNode`.
+  - Nhóm tài nguyên và định nghĩa: `ClipPathNode`, `MaskNode`, `FilterNode`, `MarkerNode`, `PatternNode`, `UseNode`, `ForeignObjectNode`.
+- **Hệ thống lệnh path:** Lớp trừu tượng `PathCommand` (`core/path/path-command.ts`) làm lớp cha cho 10 class lệnh: `MoveToCommand`, `LineToCommand`, `CubicBezierCommand`, `QuadBezierCommand`, `ArcCommand`, `ClosePathCommand`.
+- **Hệ thống gradient:** Lớp trừu tượng `BaseGradientPaint` làm lớp cha quản lý stops, units, spread method và transform cho hai lớp con `LinearGradientPaint` và `RadialGradientPaint`.
+
+#### 3. Tính đa hình (Polymorphism)
+- Phương thức `getBounds(currentPoint: Vector2D): BoundingBox` được định nghĩa trừu tượng ở `PathCommand` và được từng class lệnh (`CubicBezierCommand`, `QuadBezierCommand`, `ArcCommand`, `LineToCommand`) ghi đè (override) để thực thi giải thuật toán học riêng biệt của từng loại đường cong.
+- Phương thức `toSVGString(): string` và `toMatrix(): Matrix2D` được đa hình hoá qua toàn bộ hệ thống lệnh transform (`TranslateTransform`, `ScaleTransform`, `RotateTransform`, `SkewTransform`, `MatrixTransform`).
+- Giao diện `IPaint` cho phép các đối tượng `SolidPaint`, `NonePaint`, `CurrentColorPaint`, `LinearGradientPaint`, `RadialGradientPaint` được truyền và xử lý đồng nhất ở thuộc tính `fill` và `stroke` của mọi node.
+
+#### 4. Tính trừu tượng (Abstraction)
+- Tách biệt hoàn toàn giữa biểu diễn dữ liệu trừu tượng (cây `ASTNode`) với cách thức hiển thị ra DOM (`DOMRenderer`), cách thức phân tích dữ liệu (`SVGAnalyzer`), và cách thức xuất file (`SVGSerializer`).
+- Các giao diện `IPaint`, `ITransform`, `SVGDefItem` thiết lập các hợp đồng giao tiếp (contracts) mức cao, giúp hệ thống dễ dàng mở rộng thêm các loại paint hoặc filter mới mà không ảnh hưởng tới core engine.
+
+---
+
+### 3.2. Các mẫu thiết kế (design patterns) áp dụng trong hệ thống
+
+1. **Composite Pattern (Cây Scene Graph & Transform List):**
+   - Cây AST tổ chức theo dạng cây đệ quy: `GroupNode` và `RootNode` có thể chứa các `ASTNode` con (bao gồm cả các `GroupNode` lồng nhau). Thao tác duyệt cây `traverse()` hoặc tính ma trận toàn cục `getWorldTransform()` được thực thi đồng nhất từ gốc đến mọi lá.
+   - `TransformList` gom nhóm danh sách các phép biến đổi đơn lẻ (`ITransform`) và tổng hợp thành một ma trận duy nhất theo thứ tự nhân từ phải sang trái.
+
+2. **Command Pattern (Lệnh Path & Quản lý Undo/Redo):**
+   - Từng phân đoạn đường cong trong thuộc tính `d` của thẻ `<path>` được trừu tượng hoá thành một đối tượng Command thực thi.
+   - Hệ thống lịch sử thao tác (`HistoryManager`) lưu trữ ngăn xếp các đối tượng lệnh chỉnh sửa để hỗ trợ hoàn tác và làm lại (`Ctrl + Z`, `Ctrl + Y`).
+
+3. **Strategy & Factory Pattern (Hệ thống màu vẽ Paint):**
+   - `IPaint` đóng vai trò Strategy định nghĩa chiến lược tô màu và sinh mã SVG.
+   - `PaintFactory` đóng vai trò Factory method phân tích chuỗi màu bất kỳ (`hex`, `rgb`, `hsl`, `url(#id)`, `named color`, `none`, `currentColor`) để khởi tạo đối tượng Paint tương ứng.
+
+4. **Visitor Pattern (Bộ phân tích số liệu Analyzer):**
+   - `ComplexityAnalyzer` và `ColorExtractor` đóng vai trò Visitor duyệt qua toàn bộ cây AST thông qua hàm `traverse()`, thu thập các số liệu thống kê (đếm đỉnh, đếm đoạn cong, tính diện tích bao phủ, trích xuất palette màu) mà không làm biến đổi cấu trúc các node.
+
+5. **Façade Pattern (Điểm truy cập đơn giản hoá):**
+   - `SVGParser` cung cấp phương thức duy nhất `SVGParser.parse(svgString)` che giấu toàn bộ quy trình phức tạp bên dưới: gọi `DOMParser`, phân tích bảng mã màu, bóc tách `<defs>`, giải quyết kế thừa gradient đa tầng, phân tích CSS cascade và dựng cây `ASTNode`.
+   - `SVGSerializer` cung cấp phương thức `SVGSerializer.serialize(rootNode)` che giấu quá trình duyệt cây và định dạng XML.
+
+6. **Registry / Cache Pattern (Kho lưu trữ Defs):**
+   - Quản lý các định nghĩa dùng lại trong thẻ `<defs>` (gradient, clipPath, mask, marker, pattern, filter) theo bảng ánh xạ mã định danh ID, hỗ trợ truy xuất nhanh khi các node hình học tham chiếu bằng `url(#id)`.
+
+---
+
+## 4. Hướng dẫn cài đặt và chạy dự án
 
 ### Yêu cầu môi trường
 - **Node.js**: Phiên bản `>= 18.0.0`
@@ -111,12 +249,22 @@ npm run dev
 ```
 Truy cập vào đường dẫn hiển thị trên terminal (mặc định: `http://localhost:5173`).
 
+Tại giao diện đồ hoạ, bạn có thể:
+- Kéo thả file `.svg` từ máy tính vào vùng làm việc.
+- Dùng chuột giữa hoặc giữ phím `Space` kết hợp kéo chuột để di chuyển canvas (Pan).
+- Cuộn chuột để phóng to/thu nhỏ (Zoom có tâm tại vị trí con trỏ chuột).
+- Nhấp chọn đối tượng để hiển thị khung **Gizmo 8 điểm neo** co giãn và di chuyển trực tiếp.
+- Chỉnh sửa màu sắc `fill`, `stroke`, toạ độ và kích thước tại bảng **Property Inspector**.
+- Xem báo cáo thống kê số lượng node, độ phức tạp đường cong và bảng màu tại **Statistics Panel**.
+- Chuyển đổi 3 chế độ nền Artboard: Dark mode, Light paper, Transparent checkerboard.
+- Xuất file `.svg` XML chuẩn hoặc ảnh raster `.png` độ phân giải cao.
+
 ### 3. Chạy bộ kiểm thử tự động (Unit Test Suite)
 Chạy toàn bộ 18 test cases kiểm thử toán học, parser, gradient inheritance và serializer:
 ```bash
 npm test
 ```
-Hoặc chạy chế độ UI tương tác của Vitest:
+Hoặc mở giao diện đồ hoạ tương tác của Vitest:
 ```bash
 npx vitest --ui
 ```
@@ -130,215 +278,59 @@ Kết quả đóng gói sẽ nằm trong thư mục `dist/`.
 
 ---
 
-## 4. Kiến Trúc OOP & Design Patterns Chuyên Sâu
-
-Hệ thống được thiết kế theo các nguyên lý **SOLID**, phân chia ranh giới module rõ ràng (Separation of Concerns) và áp dụng các **Design Patterns** kinh điển:
-
-```text
-svgEngine/
-├── core/         ──> [Toán học 2D, Path Commands, Style, Transforms, Colors, Paints]
-├── ast/          ──> [Cây cú pháp trừu tượng AST, 22+ Node Classes theo chuẩn W3C]
-├── parser/       ──> [Lexer, Tokenizer, Multi-hop Resolver, CSS Cascader]
-├── analyzer/     ──> [Visitor/Metrics Engine: Color Palette, Complexity, Bounding Area]
-├── serializer/   ──> [Biên dịch AST sang XML SVG chuẩn & Raster PNG Canvas]
-└── viewer/       ──> [Viewport Matrix, Infinite Canvas Controller, Artboard Paper]
-```
-
----
-
-### 4.1. Tầng Toán Học & Nền Tảng (Core Layer)
-
-#### A. Toán học Vector & Ma trận Affine 2D (`core/math/`)
-- **`Vector2D`**: Đại diện điểm và vector trong không gian 2D với đầy đủ các phép tính: cộng, trừ, nhân vô hướng (dot product), tích có hướng (cross product), chuẩn hoá (normalize), tính góc (angleTo).
-- **`Matrix2D`**: Ma trận biến đổi Affine $3 \times 3$:
-  $$\begin{bmatrix} a & c & e \\ b & d & f \\ 0 & 0 & 1 \end{bmatrix}$$
-  Hỗ trợ các phép nhân ma trận kết hợp (`multiply`), nghịch đảo ma trận phi suy biến (`invert`), tạo ma trận biến đổi tịnh tiến (`translation`), quay quanh tâm (`rotation`), co giãn (`scaling`), xiên trục (`skewX`, `skewY`).
-- **`BoundingBox`**: Đại diện hộp bao chữ nhật (AABB). Cung cấp phương thức hợp nhất (`union`), mở rộng (`expand`), kiểm tra chứa điểm (`containsPoint`), biến đổi qua ma trận (`transform`).
-
-#### B. Hệ thống Tô Màu & Gradient (`core/paint/`) — Strategy & Factory Pattern
-- **`IPaint`** *(Interface)*: Định nghĩa giao diện chung cho mọi kiểu màu vẽ:
-  - `toSVGString()`: Chuỗi biểu diễn SVG (`#ff0000`, `url(#grad1)`, `none`, `currentColor`).
-  - `isTransparent()`: Kiểm tra tính trong suốt.
-- **`SolidPaint`**: Đại diện màu đơn sắc kết hợp với `Color` (hỗ trợ chuyển đổi giữa RGB, HSL, Hex, và 148 màu định danh W3C).
-- **`BaseGradientPaint`** *(Abstract Class)*: Lớp cơ sở cho Gradient, quản lý danh sách `GradientStop`, `spreadMethod` (`pad`, `reflect`, `repeat`), `gradientUnits` (`userSpaceOnUse`, `objectBoundingBox`), `gradientTransform`.
-- **`LinearGradientPaint`**: Quản lý toạ độ vector hướng gradient $(x_1, y_1) \rightarrow (x_2, y_2)$.
-- **`RadialGradientPaint`**: Quản lý tâm $(cx, cy)$, bán kính $r$, tiêu điểm $(fx, fy)$ và bán kính tiêu cự $fr$ (chuẩn SVG 2).
-- **`PaintFactory`** *(Factory Pattern)*: Phân tích chuỗi đầu vào bất kỳ thành đối tượng `IPaint` tương ứng.
-
-#### C. Hệ thống Biến Đổi Tương Tác (`core/transforms/`) — Composite Pattern
-- **`ITransform`** *(Interface)*: Định nghĩa phương thức `toMatrix(): Matrix2D` và `toSVGString(): string`.
-- **`TranslateTransform`**, **`ScaleTransform`**, **`RotateTransform`**, **`SkewTransform`**, **`MatrixTransform`**: Hiện thực từng loại phép biến đổi đơn lẻ.
-- **`TransformList`** *(Composite Pattern)*: Danh sách chuỗi các phép biến đổi được gom nhóm và nhân ma trận tuần tự từ phải sang trái theo đúng chuẩn đồ hoạ vector.
-
-#### D. Hệ thống Lệnh Path Đa Hình (`core/path/`) — Polymorphic Command Pattern
-- **`PathCommand`** *(Abstract Class)*: Lớp cha của toàn bộ 10 nhóm lệnh đường cong W3C:
-  - `toAbsolute(currentPoint: Vector2D): PathCommand`: Chuẩn hoá lệnh relative (`m`, `l`, `c`...) thành absolute (`M`, `L`, `C`...).
-  - `getEndPoint(currentPoint: Vector2D): Vector2D`: Tính điểm kết thúc của lệnh.
-  - `getBounds(currentPoint: Vector2D): BoundingBox`: Tính Bounding Box chính xác của phân đoạn.
-  - `transform(matrix: Matrix2D): PathCommand`: Áp dụng ma trận biến đổi lên toạ độ phân đoạn.
-- **`MoveToCommand`** (`M`/`m`), **`LineToCommand`** (`L`/`l`, `H`/`h`, `V`/`v`), **`ClosePathCommand`** (`Z`/`z`).
-- **`CubicBezierCommand`** (`C`/`c`, `S`/`s`): Tính toán hộp bao chính xác tuyệt đối bằng cực trị nghiệm đạo hàm $B'(t) = 0$.
-- **`QuadBezierCommand`** (`Q`/`q`, `T`/`t`): Hỗ trợ tính cực trị bậc 1 và nâng bậc đường cong lên bậc 3 (`toCubicBezier()`).
-- **`ArcCommand`** (`A`/`a`): Thực thi thuật toán W3C F.6 chuyển đổi sang dạng tâm và phân rã thành chuỗi Cubic Bézier.
-- **`PathData`**: Quản lý toàn bộ danh sách lệnh của một đường Path, cung cấp phương thức `toSVGString()`, `getBounds()`, `transform()`.
-
----
-
-### 4.2. Tầng Cây Cú Pháp Trừu Tượng (AST Scene Graph Layer)
-
-Áp dụng **Composite Pattern** để xây dựng cây Scene Graph phân cấp đa tầng:
-
-```text
-ASTNode (Abstract Base)
-├── GroupNode (<g>)
-│   └── (Children ASTNodes...)
-├── RootNode (<svg>)
-├── Shape Nodes:
-│   ├── RectNode (<rect>)
-│   ├── CircleNode (<circle>)
-│   ├── EllipseNode (<ellipse>)
-│   ├── LineNode (<line>)
-│   ├── PolylineNode (<polyline>)
-│   └── PolygonNode (<polygon>)
-├── PathNode (<path>)
-├── Text Nodes:
-│   ├── TextNode (<text>)
-│   ├── TSpanNode (<tspan>)
-│   └── TextPathNode (<textPath>)
-├── Resource & Defs Nodes:
-│   ├── ClipPathNode (<clipPath>)
-│   ├── MaskNode (<mask>)
-│   ├── FilterNode (<filter>)
-│   ├── MarkerNode (<marker>)
-│   ├── PatternNode (<pattern>)
-│   ├── SymbolNode (<symbol>)
-│   └── UseNode (<use>)
-└── AnchorNode (<a>) & ForeignObjectNode (<foreignObject>)
-```
-
-Mỗi `ASTNode` đóng gói 3 khối dữ liệu độc lập:
-1. **Geometry Layer**: Chứa toạ độ hình học gốc, danh sách `PathCommand`, ma trận `transform` và `BoundingBox`.
-2. **Style Layer**: Chứa `Style` (Fill, Stroke, StrokeWidth, Opacity, FontStyle) đã qua tính toán kế thừa.
-3. **Metadata Layer**: Chứa `id`, `classNames`, `attributes` mở rộng và trạng thái tương tác (`visible`, `locked`).
-
-Cung cấp các phương thức duyệt cây và quản lý quan hệ:
-- `addChild(child: ASTNode)`, `removeChild(child: ASTNode)`, `traverse(callback: (node: ASTNode) => void)`.
-- `clone()`: Deep clone toàn bộ cấu trúc node con và thuộc tính.
-- `getWorldTransform()`: Nhân ma trận dồn từ Root đến Node hiện tại.
-- `getWorldBounds()`: Tính toạ độ bao ngoài toàn cục trong không gian Scene.
-
----
-
-### 4.3. Tầng Phân Tích Cú Pháp (Parser & Compiler Layer)
-
-- **`SVGParser`** *(Façade Pattern)*: Điểm tiếp nhận chuỗi SVG thô, khởi tạo DOMParser, bóc tách thẻ `<defs>`, duyệt cây DOM đệ quy và khởi tạo cây `SVGAST`.
-- **`PathParser`** *(Lexer & Tokenizer)*:
-  - Tách token thông minh không phụ thuộc khoảng trắng (`M10-20.5.5L30e2-40`).
-  - Phân tích cờ Arc flags dính liền (`0150`).
-  - Xử lý đối xứng điểm điều khiển tự động cho `S`/`s` và `T`/`t`.
-  - Tự động chuyển toạ độ ngầm định sau `M` thành lệnh `L`.
-- **`GradientParser`** *(DAG Multi-hop Resolver)*:
-  - Phân giải chuỗi kế thừa `href`/`xlink:href` nhiều tầng (`#child` $\rightarrow$ `#mid` $\rightarrow$ `#base`).
-  - Kế thừa tự động stops, thuộc tính toạ độ, `spreadMethod`, `gradientUnits`, `gradientTransform`.
-  - Hỗ trợ đầy đủ bán kính tiêu cự $fr$ của SVG 2.
-- **`CSSStylesheetParser` & `StyleParser`**:
-  - Đọc thẻ `<style>` nội bộ và phân tách các bộ chọn CSS (class, id, element type).
-  - Áp dụng thứ tự ưu tiên chuẩn W3C: `Inherited Style < <style> Rules < Presentation Attributes < Inline Style`.
-- **`FilterParser`**: Bóc tách các bộ lọc hiệu ứng phức tạp (`feGaussianBlur`, `feDropShadow`, `feColorMatrix`, `feBlend`...).
-
----
-
-### 4.4. Tầng Phân Tích & Thống Kê (Analyzer Layer)
-
-Áp dụng **Visitor Pattern** để duyệt toàn bộ cây AST và trích xuất số liệu:
-- **`SVGAnalyzer`**: Bộ điều phối tổng, xuất báo cáo `SVGStatisticsReport`.
-- **`ComplexityAnalyzer`**:
-  - Đếm chi tiết số lượng từng loại thẻ (`rectCount`, `pathCount`, `textCount`...).
-  - Thống kê tổng số điểm nút (nodes/vertices), tổng số đoạn cong Bézier.
-  - Tính tổng diện tích phủ (Coverage area) và độ sâu lớn nhất của cây phân cấp.
-- **`ColorExtractor`**:
-  - Trích xuất toàn bộ bảng màu đơn sắc (`Solid Colors`) và tần suất xuất hiện.
-  - Trích xuất toàn bộ bảng màu Gradient (Linear / Radial) và các điểm stop màu.
-
----
-
-### 4.5. Tầng Xuất Bản & Serializer (Serializer Layer)
-
-- **`SVGSerializer`**:
-  - **AST to XML Stringifier**: Duyệt cây AST và xuất ra chuỗi XML SVG sạch sẽ, định dạng chuẩn (pretty-printed), giữ lại đầy đủ `<defs>`, gradient, clipPath, style và metadata.
-  - **Canvas Raster Exporter**: Vẽ cây SVG lên HTML5 Canvas 2D ảo để xuất ra ảnh raster định dạng `.png` với độ phân giải tuỳ chỉnh sắc nét.
-
----
-
-### 4.6. Tầng Viewport & Interactive IDE (Editor Layer)
-
-- **`ViewportController`**:
-  - Điều khiển không gian làm việc với ma trận Zoom & Pan.
-  - Zoom hướng tâm theo vị trí trỏ chuột (`mouse-centered zoom`).
-  - Fit to Screen: Tự động căn giữa và co giãn viewBox của SVG vừa vặn với kích thước màn hình.
-  - Artboard Paper: Hiển thị giấy vẽ đồ hoạ với 3 chế độ nền (`Dark Mode`, `Light Paper`, `Transparent Checkerboard`).
-- **Interactive Gizmo**:
-  - Khung bao 8 handles co giãn 8 hướng (Top-Left, Top, Top-Right, Right, Bottom-Right, Bottom, Bottom-Left, Left).
-  - Tự động cập nhật toạ độ và kích thước ngược lại AST Node khi kéo thả trên canvas.
-- **Command History Manager** *(Command Pattern)*:
-  - Lưu trữ ngăn xếp thao tác (Undo / Redo Stack).
-  - Hỗ trợ phím tắt `Ctrl + Z` và `Ctrl + Y`.
-
----
-
-## 5. Cấu Trúc Thư Mục Dự Án
+## 5. Cấu trúc thư mục dự án
 
 ```text
 SmartSVG/
-├── .gitignore                      # Cấu hình bỏ qua file rác git
-├── package.json                    # Khai báo dependencies & scripts
-├── tsconfig.json                   # Cấu hình TypeScript nghiêm ngặt (Strict)
-├── vite.config.ts                  # Cấu hình Vite bundler
+├── .gitignore                      # Cấu hình bỏ qua file tạm và build artifacts
+├── package.json                    # Khai báo dependencies và scripts
+├── tsconfig.json                   # Cấu hình TypeScript chế độ nghiêm ngặt (Strict)
+├── vite.config.ts                  # Cấu hình bundler Vite
 ├── vitest.config.ts                # Cấu hình môi trường kiểm thử Vitest (happy-dom)
-├── README.md                       # Tài liệu hướng dẫn & Kiến trúc chi tiết
+├── README.md                       # Tài liệu hướng dẫn và kiến trúc chi tiết
 │
 ├── svgEngine/                      # THƯ VIỆN CỐT LÕI (CORE ENGINE)
 │   ├── spec/                       # Hằng số và định nghĩa chuẩn SVG
-│   ├── core/                       # Toán học, Path Commands, Style, Transforms, Paint
+│   ├── core/                       # Toán học 2D, Path Commands, Style, Transforms, Paint
 │   │   ├── math/                   # Vector2D, Matrix2D, BoundingBox
 │   │   ├── values/                 # SVGLength, SVGAngle
 │   │   ├── paint/                  # Color, IPaint, SolidPaint, Gradient, PaintFactory
 │   │   ├── transforms/             # TransformList, Matrix, Translate, Rotate...
 │   │   ├── style/                  # Style, Stroke, FontStyle
 │   │   └── path/                   # PathData, PathCommand, Cubic, Quad, Arc, Line...
-│   ├── ast/                        # Cây cú pháp trừu tượng AST (22+ Node types)
-│   │   ├── ast-node.ts             # Abstract Base AST Node
+│   ├── ast/                        # Cây cú pháp trừu tượng AST (22+ node types)
+│   │   ├── ast-node.ts             # Abstract base AST node
 │   │   └── nodes/                  # RootNode, GroupNode, PathNode, ShapeNodes...
 │   ├── parser/                     # Bộ phân tích cú pháp (Compiler)
-│   │   ├── svg-parser.ts           # Trình phân giải XML -> AST
-│   │   ├── path-parser.ts          # Lexer & Tokenizer chuỗi 'd'
+│   │   ├── svg-parser.ts           # Phân giải DOM XML sang AST
+│   │   ├── path-parser.ts          # Lexer và tokenizer chuỗi lệnh 'd'
 │   │   ├── gradient-parser.ts      # Bộ kế thừa gradient đa tầng
-│   │   ├── style-parser.ts         # Bộ phân tích Style & CSS cascade
-│   │   ├── css-stylesheet-parser.ts# Bộ phân tích <style> rules
-│   │   └── filter-parser.ts        # Bộ phân tích <filter> primitives
-│   ├── analyzer/                   # Bộ phân tích & thống kê số liệu
+│   │   ├── style-parser.ts         # Bộ phân tích style và CSS cascade
+│   │   ├── css-stylesheet-parser.ts# Phân tích các quy tắc thẻ <style>
+│   │   └── filter-parser.ts        # Phân tích bộ lọc <filter> primitives
+│   ├── analyzer/                   # Bộ phân tích và thống kê số liệu
 │   │   ├── svg-analyzer.ts         # Điều phối phân tích tổng
 │   │   ├── complexity-analyzer.ts  # Phân tích độ phức tạp hình học
-│   │   └── color-extractor.ts      # Bóc tách bảng màu & gradients
+│   │   └── color-extractor.ts      # Bóc tách bảng màu đơn sắc và gradient
 │   ├── serializer/                 # Xuất bản file
-│   │   └── svg-serializer.ts       # Xuất chuỗi XML chuẩn & ảnh PNG
-│   ├── viewer/                     # Điều khiển hiển thị Canvas & Artboard
+│   │   └── svg-serializer.ts       # Xuất chuỗi XML chuẩn và ảnh PNG
+│   ├── viewer/                     # Điều khiển hiển thị Canvas và Artboard
 │   │   └── viewport-controller.ts  # Quản lý Zoom, Pan, Fit, Artboard mode
 │   ├── __tests__/                  # Bộ kiểm thử tự động (Unit Test Suite)
 │   │   └── svg-engine.test.ts      # 18 test cases bao phủ toàn bộ engine
-│   └── index.ts                    # Entry export chính của svgEngine
+│   └── index.ts                    # Điểm xuất khẩu chính của svgEngine
 │
 └── playground/                     # GIAO DIỆN PHÒNG THÍ NGHIỆM ĐỒ HOẠ (Vite App)
     ├── index.html                  # Giao diện IDE: Toolbar, Canvas, Sidebar
-    ├── style.css                   # Theme Dark Mode Studio chuyên nghiệp
+    ├── style.css                   # Giao diện Dark Mode Studio
     └── main.ts                     # Điều phối toàn bộ sự kiện IDE tương tác
 ```
 
 ---
 
-## 6. Bộ Kiểm Thử Tự Động (Unit Testing)
+## 6. Bộ kiểm thử tự động (unit testing)
 
-Dự án được bảo vệ bằng bộ unit test viết trên **Vitest** kết hợp môi trường giả lập DOM **happy-dom**, bao phủ các trường hợp biên quan trọng:
+Dự án được bảo vệ bằng bộ kiểm thử tự động viết trên **Vitest** kết hợp môi trường giả lập DOM **happy-dom**, bao phủ các trường hợp biên quan trọng:
 
 ```bash
 $ npm test
@@ -374,6 +366,6 @@ Test Files  1 passed (1)
 
 ---
 
-## 7. Bản Quyền (License)
+## 7. Bản quyền (license)
 
 Dự án phát hành theo giấy phép **ISC License**. Tự do sử dụng và mở rộng cho mục đích học tập, nghiên cứu và phát triển thương mại.
