@@ -2,7 +2,7 @@
 
 > Thư viện SVG Engine chuẩn W3C SVG 1.1 và SVG 2 được viết hoàn toàn bằng TypeScript từ con số 0, tích hợp công cụ đồ hoạ vector tương tác thời gian thực.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.x-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF.svg)](https://vitejs.dev/)
 [![Vitest](https://img.shields.io/badge/Vitest-4.x-729B1B.svg)](https://vitest.dev/)
 [![Tests](https://img.shields.io/badge/Tests-18%2F18%20Passed-brightgreen.svg)](#6-bộ-kiểm-thử-tự-động-unit-testing)
@@ -333,8 +333,8 @@ svgEngine/
 ## 4. Hướng dẫn cài đặt và chạy dự án
 
 ### Yêu cầu môi trường
-- **Node.js**: Phiên bản `>= 18.0.0`
-- **npm**: Phiên bản `>= 9.0.0`
+- **Node.js**: `^20.19.0` hoặc `>= 22.12.0` (yêu cầu của Vite 8 và Vitest 4)
+- **npm**: Phiên bản `>= 10.0.0`
 
 ### 1. Cài đặt dependencies
 Mở terminal tại thư mục gốc của dự án và chạy:
@@ -347,7 +347,7 @@ Khởi chạy Vite dev server để mở giao diện IDE Studio:
 ```bash
 npm run dev
 ```
-Truy cập vào đường dẫn hiển thị trên terminal (mặc định: `http://localhost:5173`).
+Truy cập vào đường dẫn hiển thị trên terminal (mặc định: `http://localhost:5173`). Vite dùng thư mục `playground/` làm gốc (xem `vite.config.ts`), nên Studio mở thẳng tại `/`.
 
 Tại giao diện đồ hoạ, bạn có thể:
 - Kéo thả file `.svg` từ máy tính vào vùng làm việc.
@@ -362,11 +362,12 @@ Tại giao diện đồ hoạ, bạn có thể:
 ### 3. Chạy bộ kiểm thử tự động (Unit Test Suite)
 Chạy toàn bộ 18 test cases kiểm thử toán học, parser, gradient inheritance và serializer:
 ```bash
-npm test
+npm test          # chế độ watch
+npm run test:run  # chạy một lần (dùng cho CI)
 ```
-Hoặc mở giao diện đồ hoạ tương tác của Vitest:
+Chỉ kiểm tra kiểu TypeScript (không build):
 ```bash
-npx vitest --ui
+npm run typecheck
 ```
 
 ### 4. Đóng gói sản phẩm (Production Build)
@@ -374,7 +375,12 @@ Kiểm tra type-check TypeScript và build production bundle:
 ```bash
 npm run build
 ```
-Kết quả đóng gói sẽ nằm trong thư mục `dist/`.
+Kết quả đóng gói (ứng dụng Studio trong `playground/` cùng engine) nằm trong thư mục `dist/`. Đường dẫn asset là tương đối (`base: './'`), nên có thể deploy `dist/` lên bất kỳ thư mục con nào (ví dụ GitHub Pages).
+
+Xem thử bản build ở máy local:
+```bash
+npm run preview
+```
 
 ---
 
@@ -383,22 +389,23 @@ Kết quả đóng gói sẽ nằm trong thư mục `dist/`.
 ```text
 SmartSVG/
 ├── .gitignore                      # Cấu hình bỏ qua file tạm và build artifacts
+├── PLAN.md                         # Kế hoạch phát triển (AI data analytics trên nền SVG engine)
 ├── package.json                    # Khai báo dependencies và scripts
 ├── tsconfig.json                   # Cấu hình TypeScript chế độ nghiêm ngặt (Strict)
-├── vite.config.ts                  # Cấu hình bundler Vite
+├── vite.config.ts                  # Cấu hình Vite: root = playground/, build ra dist/
 ├── vitest.config.ts                # Cấu hình môi trường kiểm thử Vitest (happy-dom)
 ├── README.md                       # Tài liệu hướng dẫn và kiến trúc chi tiết
 │
 ├── svgEngine/                      # THƯ VIỆN CỐT LÕI (CORE ENGINE)
-│   ├── spec/                       # Hằng số và định nghĩa chuẩn SVG
 │   ├── core/                       # Toán học 2D, Path Commands, Style, Transforms, Paint
+│   │   ├── types/                  # Kiểu dữ liệu dùng chung (common.types.ts)
 │   │   ├── math/                   # Vector2D, Matrix2D, BoundingBox
 │   │   ├── values/                 # SVGLength, SVGAngle
 │   │   ├── paint/                  # Color, IPaint, SolidPaint, Gradient, PaintFactory
-│   │   ├── transforms/             # TransformList, Matrix, Translate, Rotate...
+│   │   ├── transforms/             # TransformList, Matrix, Translate, Rotate, Scale, Skew
 │   │   ├── style/                  # Style, Stroke, FontStyle
 │   │   └── path/                   # PathData, PathCommand, Cubic, Quad, Arc, Line...
-│   ├── ast/                        # Cây cú pháp trừu tượng AST (22+ node types)
+│   ├── ast/                        # Cây cú pháp trừu tượng AST (22 node types)
 │   │   ├── ast-node.ts             # Abstract base AST node
 │   │   └── nodes/                  # RootNode, GroupNode, PathNode, ShapeNodes...
 │   ├── parser/                     # Bộ phân tích cú pháp (Compiler)
@@ -420,8 +427,8 @@ SmartSVG/
 │   │   └── svg-engine.test.ts      # 18 test cases bao phủ toàn bộ engine
 │   └── index.ts                    # Điểm xuất khẩu chính của svgEngine
 │
-└── playground/                     # GIAO DIỆN PHÒNG THÍ NGHIỆM ĐỒ HOẠ (Vite App)
-    ├── index.html                  # Giao diện IDE: Toolbar, Canvas, Sidebar
+└── playground/                     # GIAO DIỆN PHÒNG THÍ NGHIỆM ĐỒ HOẠ (Vite root)
+    ├── index.html                  # Trang chính của Studio: Toolbar, Canvas, Sidebar
     ├── style.css                   # Giao diện Dark Mode Studio
     └── main.ts                     # Điều phối toàn bộ sự kiện IDE tương tác
 ```
