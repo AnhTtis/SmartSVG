@@ -82,77 +82,77 @@ Một cung elip trong SVG được xác định bởi điểm xuất phát $`\ma
 
 Giải thuật W3C Appendix F.6 chuyển đổi từ tham số điểm cuối sang tham số tâm $`(c_x, c_y, \theta_1, \Delta\theta)`$ và phân rã thành chuỗi đường cong cubic Bézier:
 
-1. **Chuyển toạ độ sai phân sang hệ trục elip quay:**
+#### Bước 1. Chuyển toạ độ sai phân sang hệ trục elip quay
 
-   ```math
-   \begin{bmatrix} x_1' \\ y_1' \end{bmatrix} = \begin{bmatrix} \cos\phi & \sin\phi \\ -\sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} \frac{x_1 - x_2}{2} \\ \frac{y_1 - y_2}{2} \end{bmatrix}
-   ```
+```math
+\begin{bmatrix} x_1' \\ y_1' \end{bmatrix} = \begin{bmatrix} \cos\phi & \sin\phi \\ -\sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} \frac{x_1 - x_2}{2} \\ \frac{y_1 - y_2}{2} \end{bmatrix}
+```
 
-2. **Kiểm tra và tự động co giãn bán kính nếu không đủ lớn:**
+#### Bước 2. Kiểm tra và tự động co giãn bán kính nếu không đủ lớn
 
-   ```math
-   \Lambda = \frac{(x_1')^2}{r_x^2} + \frac{(y_1')^2}{r_y^2}
-   ```
+```math
+\Lambda = \frac{(x_1')^2}{r_x^2} + \frac{(y_1')^2}{r_y^2}
+```
 
-   Nếu $`\Lambda > 1`$, cung elip không thể đi qua hai điểm với bán kính hiện tại. Chuẩn W3C quy định tự động co giãn:
+Nếu $`\Lambda > 1`$, cung elip không thể đi qua hai điểm với bán kính hiện tại. Chuẩn W3C quy định tự động co giãn:
 
-   ```math
-   r_x \leftarrow \sqrt{\Lambda} \, r_x, \quad r_y \leftarrow \sqrt{\Lambda} \, r_y
-   ```
+```math
+r_x \leftarrow \sqrt{\Lambda} \, r_x, \quad r_y \leftarrow \sqrt{\Lambda} \, r_y
+```
 
-3. **Tính toạ độ tâm trong hệ trục quay $`(c_x', c_y')`$:**
+#### Bước 3. Tính toạ độ tâm trong hệ trục quay $`(c_x', c_y')`$
 
-   ```math
-   \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} = \pm \sqrt{\max\left(0, \frac{r_x^2 r_y^2 - r_x^2 (y_1')^2 - r_y^2 (x_1')^2}{r_x^2 (y_1')^2 + r_y^2 (x_1')^2}\right)} \begin{bmatrix} \frac{r_x y_1'}{r_y} \\ -\frac{r_y x_1'}{r_x} \end{bmatrix}
-   ```
+```math
+\begin{bmatrix} c_x' \\ c_y' \end{bmatrix} = \pm \sqrt{\max\left(0, \frac{r_x^2 r_y^2 - r_x^2 (y_1')^2 - r_y^2 (x_1')^2}{r_x^2 (y_1')^2 + r_y^2 (x_1')^2}\right)} \begin{bmatrix} \frac{r_x y_1'}{r_y} \\ -\frac{r_y x_1'}{r_x} \end{bmatrix}
+```
 
-   Quy tắc dấu: Chọn dấu $`+`$ nếu $`f_A \neq f_S`$, chọn dấu $`-`$ nếu $`f_A = f_S`$.
+Quy tắc dấu: Chọn dấu $`+`$ nếu $`f_A \neq f_S`$, chọn dấu $`-`$ nếu $`f_A = f_S`$.
 
-4. **Chuyển tâm về hệ toạ độ thế giới ban đầu $`(c_x, c_y)`$:**
+#### Bước 4. Chuyển tâm về hệ toạ độ thế giới ban đầu $`(c_x, c_y)`$
 
-   ```math
-   \begin{bmatrix} c_x \\ c_y \end{bmatrix} = \begin{bmatrix} \cos\phi & -\sin\phi \\ \sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} + \begin{bmatrix} \frac{x_1 + x_2}{2} \\ \frac{y_1 + y_2}{2} \end{bmatrix}
-   ```
+```math
+\begin{bmatrix} c_x \\ c_y \end{bmatrix} = \begin{bmatrix} \cos\phi & -\sin\phi \\ \sin\phi & \cos\phi \end{bmatrix} \begin{bmatrix} c_x' \\ c_y' \end{bmatrix} + \begin{bmatrix} \frac{x_1 + x_2}{2} \\ \frac{y_1 + y_2}{2} \end{bmatrix}
+```
 
-5. **Xác định góc bắt đầu $`\theta_1`$ và góc quét $`\Delta\theta`$:**
+#### Bước 5. Xác định góc bắt đầu $`\theta_1`$ và góc quét $`\Delta\theta`$
 
-   Hàm tính góc có dấu giữa hai vector 2D $`\mathbf{u}`$ và $`\mathbf{v}`$:
+Hàm tính góc có dấu giữa hai vector 2D $`\mathbf{u}`$ và $`\mathbf{v}`$:
 
-   ```math
-   \operatorname{angle}(\mathbf{u}, \mathbf{v}) = \operatorname{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)
-   ```
+```math
+\operatorname{angle}(\mathbf{u}, \mathbf{v}) = \operatorname{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)
+```
 
-   Từ đó tính góc bắt đầu và góc quét:
+Từ đó tính góc bắt đầu và góc quét:
 
-   ```math
-   \theta_1 = \operatorname{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \operatorname{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)
-   ```
+```math
+\theta_1 = \operatorname{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \operatorname{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)
+```
 
-   Hiệu chỉnh góc quét theo cờ $`f_S`$:
-   - Nếu $`f_S = 0`$ và $`\Delta\theta > 0`$, thì $`\Delta\theta \leftarrow \Delta\theta - 2\pi`$.
-   - Nếu $`f_S = 1`$ và $`\Delta\theta < 0`$, thì $`\Delta\theta \leftarrow \Delta\theta + 2\pi`$.
+Hiệu chỉnh góc quét theo cờ $`f_S`$:
+- Nếu $`f_S = 0`$ và $`\Delta\theta > 0`$, thì $`\Delta\theta \leftarrow \Delta\theta - 2\pi`$.
+- Nếu $`f_S = 1`$ và $`\Delta\theta < 0`$, thì $`\Delta\theta \leftarrow \Delta\theta + 2\pi`$.
 
-6. **Phân đoạn và xấp xỉ bằng cubic Bézier:**
+#### Bước 6. Phân đoạn và xấp xỉ bằng cubic Bézier
 
-   Cung được chia thành $`N = \lceil |\Delta\theta| / (\pi/2) \rceil`$ phân đoạn góc nhỏ $`\delta = \Delta\theta / N`$.
+Cung được chia thành $`N = \lceil |\Delta\theta| / (\pi/2) \rceil`$ phân đoạn góc nhỏ $`\delta = \Delta\theta / N`$.
 
-   Hệ số khoảng cách điểm điều khiển:
+Hệ số khoảng cách điểm điều khiển:
 
-   ```math
-   \alpha = \frac{4}{3} \tan\left(\frac{\delta}{4}\right)
-   ```
+```math
+\alpha = \frac{4}{3} \tan\left(\frac{\delta}{4}\right)
+```
 
-   Với mỗi góc $`\theta`$, toạ độ điểm trên elip và đạo hàm tiếp tuyến:
+Với mỗi góc $`\theta`$, toạ độ điểm trên elip và đạo hàm tiếp tuyến:
 
-   ```math
-   \mathbf{P}(\theta) = \begin{bmatrix} c_x + r_x \cos\theta \cos\phi - r_y \sin\theta \sin\phi \\ c_y + r_x \cos\theta \sin\phi + r_y \sin\theta \cos\phi \end{bmatrix}, \quad \mathbf{P}'(\theta) = \begin{bmatrix} -r_x \sin\theta \cos\phi - r_y \cos\theta \sin\phi \\ -r_x \sin\theta \sin\phi + r_y \cos\theta \cos\phi \end{bmatrix}
-   ```
+```math
+\mathbf{P}(\theta) = \begin{bmatrix} c_x + r_x \cos\theta \cos\phi - r_y \sin\theta \sin\phi \\ c_y + r_x \cos\theta \sin\phi + r_y \sin\theta \cos\phi \end{bmatrix}, \quad \mathbf{P}'(\theta) = \begin{bmatrix} -r_x \sin\theta \cos\phi - r_y \cos\theta \sin\phi \\ -r_x \sin\theta \sin\phi + r_y \cos\theta \cos\phi \end{bmatrix}
+```
 
-   Hai điểm điều khiển cho từng phân đoạn từ $`\theta`$ đến $`\theta + \delta`$:
+Hai điểm điều khiển cho từng phân đoạn từ $`\theta`$ đến $`\theta + \delta`$:
 
-   ```math
-   \mathbf{CP}_1 = \mathbf{P}(\theta) + \alpha \mathbf{P}'(\theta), \quad \mathbf{CP}_2 = \mathbf{P}(\theta + \delta) - \alpha \mathbf{P}'(\theta + \delta)
-   ```
+```math
+\mathbf{CP}_1 = \mathbf{P}(\theta) + \alpha \mathbf{P}'(\theta), \quad \mathbf{CP}_2 = \mathbf{P}(\theta + \delta) - \alpha \mathbf{P}'(\theta + \delta)
+```
 
 ---
 
@@ -205,9 +205,9 @@ Trong đó các hệ số cho từng trục:
 1. Nếu $`A = 0`$ và $`B \neq 0`$: nghiệm suy biến phương trình bậc nhất $`t = -C / B`$.
 2. Nếu $`A \neq 0`$: biệt thức $`\Delta = B^2 - 4AC`$. Nếu $`\Delta \ge 0`$, hai nghiệm là:
 
-   ```math
-   t_{1, 2} = \frac{-B \pm \sqrt{\Delta}}{2A}
-   ```
+```math
+t_{1, 2} = \frac{-B \pm \sqrt{\Delta}}{2A}
+```
 
 Tất cả các nghiệm $`t_k \in (0, 1)`$ cùng với $`t = 0`$ và $`t = 1`$ tạo thành tập giá trị cực trị giải tích để tính chính xác biên $`[x_{\min}, x_{\max}] \times [y_{\min}, y_{\max}]`$.
 
