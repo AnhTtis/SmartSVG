@@ -119,13 +119,13 @@ Quy tắc dấu: Chọn dấu $`+`$ nếu $`f_A \neq f_S`$, chọn dấu $`-`$ n
 Hàm tính góc có dấu giữa hai vector 2D $`\mathbf{u}`$ và $`\mathbf{v}`$:
 
 ```math
-\operatorname{angle}(\mathbf{u}, \mathbf{v}) = \operatorname{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)
+\mathrm{angle}(\mathbf{u}, \mathbf{v}) = \mathrm{sign}(u_x v_y - u_y v_x) \cdot \arccos\left(\frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}\right)
 ```
 
 Từ đó tính góc bắt đầu và góc quét:
 
 ```math
-\theta_1 = \operatorname{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \operatorname{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)
+\theta_1 = \mathrm{angle}\left(\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}\right), \quad \Delta\theta = \mathrm{angle}\left(\begin{bmatrix} \frac{x_1' - c_x'}{r_x} \\ \frac{y_1' - c_y'}{r_y} \end{bmatrix}, \begin{bmatrix} \frac{-x_1' - c_x'}{r_x} \\ \frac{-y_1' - c_y'}{r_y} \end{bmatrix}\right)
 ```
 
 Hiệu chỉnh góc quét theo cờ $`f_S`$:
