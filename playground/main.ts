@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-export-png')?.addEventListener('click', async () => {
     if (currentAstRoot) {
       try {
-        await SVGSerializer.exportPNG(currentAstRoot, 'smartsvg_export.png', 2);
+        await SVGSerializer.exportPNG(currentAstRoot, 'smartsvg_export.png', 2, viewport.state.bgMode);
       } catch (err: any) {
         alert(`Export PNG Error: ${err.message}`);
       }

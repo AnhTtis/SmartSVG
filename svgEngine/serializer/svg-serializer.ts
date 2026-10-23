@@ -1,5 +1,6 @@
 // svgEngine/serializer/svg-serializer.ts
 import { RootNode } from '../ast/nodes/root-node';
+import type { BackgroundMode } from '../viewer/viewport-controller';
 
 export class SVGSerializer {
   /**
@@ -34,12 +35,54 @@ export class SVGSerializer {
   }
 
   /**
-   * Xuất SVG thành ảnh raster PNG với độ phân giải tùy chọn (scale/DPI)
+   * Tô nền canvas theo chế độ Paper (cùng màu với artboard trong viewport).
+   */
+  private static paintBackground(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    scale: number,
+    mode: BackgroundMode
+  ): void {
+    switch (mode) {
+      case 'white':
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        break;
+      case 'dark':
+        ctx.fillStyle = '#18181c';
+        ctx.fillRect(0, 0, width, height);
+        break;
+      case 'checkerboard': {
+        // Ô 8x8 đơn vị như #checker-pattern trong playground, nhân theo scale khi xuất
+        const cell = 8 * scale;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#e2e8f0';
+        for (let y = 0; y < height; y += cell) {
+          for (let x = 0; x < width; x += cell) {
+            if ((Math.floor(x / cell) + Math.floor(y / cell)) % 2 === 0) {
+              ctx.fillRect(x, y, cell, cell);
+            }
+          }
+        }
+        break;
+      }
+      case 'transparent':
+        break;
+    }
+  }
+
+  /**
+   * Xuất SVG thành ảnh raster PNG với độ phân giải tùy chọn (scale/DPI).
+   * `background` quyết định nền của ảnh: giống chế độ Paper đang chọn trong Studio,
+   * hoặc 'transparent' để giữ nền trong suốt.
    */
   static async exportPNG(
     root: RootNode,
     filename: string = 'graphic.png',
-    scale: number = 2
+    scale: number = 2,
+    background: BackgroundMode = 'transparent'
   ): Promise<void> {
     const xml = this.serialize(root, false);
     const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
@@ -62,6 +105,7 @@ export class SVGSerializer {
           return;
         }
 
+        this.paintBackground(ctx, width, height, scale, background);
         ctx.drawImage(img, 0, 0, width, height);
         URL.revokeObjectURL(url);
 
